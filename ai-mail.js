@@ -11,7 +11,6 @@
   // 1. State
   // ---------------------------------------------------------------------------
   var LS_EMC = 'qrAttEmc';
-  var LS_AI = 'qrAttAi';
   var LS_CHAT = 'qrAttAiChat';
 
   function readJson(key) {
@@ -22,54 +21,49 @@
   }
 
   window.emc = Object.assign({ autoSend: false, gasUrl: '', map: {}, outbox: [] }, readJson(LS_EMC));
-  window.aiConfig = Object.assign({
-    provider: 'gemini',            // gemini | deepseek | openai
-    apiKey: '',
-    model: 'gemini-3.6-flash',
-    effort: 'medium',              // DeepSeek thinking effort: none | low | medium | high | max
-    baseUrl: '',                   // OpenAI-compatible only
-    customModel: '',               // OpenAI-compatible only
-    freeCloud: true                // Use the keyless public AI when online and no key is set
-  }, readJson(LS_AI));
-
-  // Model catalogs. DeepSeek V4 is the "smart" option: flash is fast,
-  // pro is the most capable; thinking effort controls how hard it reasons.
-  var MODEL_CATALOG = {
-    gemini: [
-      ['gemini-3.6-flash', 'gemini-3.6-flash (Recommended)'],
-      ['gemini-3.5-flash-lite', 'gemini-3.5-flash-lite (Faster)'],
-      ['gemini-2.5-flash', 'gemini-2.5-flash'],
-      ['gemini-2.0-flash', 'gemini-2.0-flash']
-    ],
-    deepseek: [
-      ['deepseek-flash', 'DeepSeek V4.1 Flash (smart + fast)'],
-      ['deepseek-v4-pro', 'DeepSeek V4 Pro (smartest)'],
-      ['deepseek-v4-flash', 'DeepSeek V4 Flash (alias)']
-    ],
-    openai: []
-  };
-  var PROVIDER_INFO = {
-    gemini: { name: 'Gemini', keyHint: 'AIza...', where: 'aistudio.google.com/apikey' },
-    deepseek: { name: 'DeepSeek', keyHint: 'sk-...', where: 'platform.deepseek.com/api_keys' },
-    openai: { name: 'OpenAI-compatible', keyHint: 'sk-...', where: 'your provider dashboard' }
-  };
-
   function saveEmc() { writeJson(LS_EMC, window.emc); }
-  function saveAiConfig() { writeJson(LS_AI, window.aiConfig); }
 
-  // Migrate configs saved by older builds (which only had Gemini).
-  (function migrateAiConfig() {
-    var saved = readJson(LS_AI);
-    if (!saved.provider) {
-      if (saved.apiKey && /^AIza/.test(saved.apiKey)) window.aiConfig.provider = 'gemini';
-      else if (saved.model && /^gemini/i.test(saved.model)) window.aiConfig.provider = 'gemini';
-      else window.aiConfig.provider = 'deepseek';
-      if (window.aiConfig.provider === 'deepseek' && /^gemini/i.test(window.aiConfig.model || '')) {
-        window.aiConfig.model = 'deepseek-flash';
-      }
-      saveAiConfig();
+  // On-device AI (LiteRT-LM). No API keys, no cloud endpoints.
+  var localAi = {
+    state: 'idle',          // idle | loading | ready | missing_model | error
+    message: '',
+    detail: '',
+    modelPath: '',
+    searched: [],
+    pending: {}             // requestId -> { bubble, raw, done, error }
+  };
+
+  function hasNativeAi() {
+    return !!(window.AndroidApp && typeof window.AndroidApp.aiGenerate === 'function');
+  }
+
+  function refreshLocalAiStatus() {
+    if (!hasNativeAi()) {
+      localAi.state = 'unavailable';
+      localAi.message = 'On-device AI bridge is not available in this build.';
+      return localAi;
     }
-  })();
+    try {
+      var raw = window.AndroidApp.aiStatus ? window.AndroidApp.aiStatus() : '{}';
+      var s = JSON.parse(raw || '{}');
+      localAi.state = s.state || 'idle';
+      localAi.message = s.message || '';
+      localAi.detail = s.detail || '';
+      localAi.modelPath = s.modelPath || '';
+      localAi.searched = Array.isArray(s.searched) ? s.searched : [];
+    } catch (e) {
+      localAi.state = 'error';
+      localAi.message = 'Could not read local AI status.';
+    }
+    return localAi;
+  }
+
+  function initLocalAi() {
+    if (!hasNativeAi()) { refreshLocalAiStatus(); updateAiStatus(); return; }
+    try { window.AndroidApp.aiInit(); } catch (e) {}
+    refreshLocalAiStatus();
+    updateAiStatus();
+  }
 
   // Chat history used for follow-up questions. Stored so the thread survives a reload.
   var history = [];
@@ -185,7 +179,7 @@
     drawer.innerHTML = `
       <div class="ai-content" onclick="event.stopPropagation()">
         <div class="ai-header">
-          <h3>✨ AI Assistant <span class="ai-status offline" id="aiStatus">offline engine</span></h3>
+          <h3>✨ AI Assistant <span class="ai-status offline" id="aiStatus">on-device AI</span></h3>
           <div style="display:flex;gap:6px">
             <button class="btn ghost sm" onclick="aiClearChat()" title="Clear chat">Clear</button>
             <button class="btn ghost sm" onclick="toggleAiDrawer()" aria-label="Close">✕</button>
@@ -223,55 +217,23 @@
         </div>
 
         <div class="ai-body" id="aiTabBodySettings" style="display:none">
-          <h4 style="margin:0 0 8px;font-size:14px">AI Configuration</h4>
+          <h4 style="margin:0 0 8px;font-size:14px">On-Device AI (Offline)</h4>
+          <p class="ai-note" style="margin:0 0 10px">This app now runs AI <b>on your device</b> using LiteRT-LM. No API key, no internet, and your class data stays on the phone.</p>
 
-          <label style="font-size:12px;font-weight:600">AI provider</label>
-          <select id="aiProvider" class="ai-input" style="width:100%;margin-bottom:10px" onchange="aiProviderChanged()">
-            <option value="deepseek">DeepSeek (smartest for this app)</option>
-            <option value="gemini">Google Gemini</option>
-            <option value="openai">OpenAI-compatible API</option>
-          </select>
-
-          <label style="font-size:12px;font-weight:600">API key</label>
-          <input class="ai-input" id="aiApiKey" type="password" placeholder="sk-..." style="width:100%;margin-bottom:4px" onchange="updAiSettings()">
-          <p class="ai-note" id="aiKeyHint" style="margin:0 0 10px"></p>
-
-          <div id="aiModelWrap">
-            <label style="font-size:12px;font-weight:600">Model</label>
-            <select id="aiModel" class="ai-input" style="width:100%;margin-bottom:10px" onchange="updAiSettings()"></select>
+          <div class="ai-card" style="margin-bottom:10px">
+            <div><b>Status:</b> <span id="localAiState">Checking…</span></div>
+            <div id="localAiModel" class="ai-note" style="margin-top:4px"></div>
+            <div id="localAiMsg" class="ai-note" style="margin-top:6px;white-space:pre-wrap"></div>
           </div>
-
-          <div id="aiCustomWrap" style="display:none">
-            <label style="font-size:12px;font-weight:600">Base URL</label>
-            <input class="ai-input" id="aiBaseUrl" placeholder="https://api.example.com/v1" style="width:100%;margin-bottom:10px" onchange="updAiSettings()">
-            <label style="font-size:12px;font-weight:600">Model name</label>
-            <input class="ai-input" id="aiCustomModel" placeholder="model-name" style="width:100%;margin-bottom:10px" onchange="updAiSettings()">
-          </div>
-
-          <div id="aiEffortWrap">
-            <label style="font-size:12px;font-weight:600">Thinking effort</label>
-            <select id="aiEffort" class="ai-input" style="width:100%;margin-bottom:6px" onchange="updAiSettings()">
-              <option value="none">Off (fastest)</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium (recommended)</option>
-              <option value="high">High</option>
-              <option value="max">Max (deepest reasoning, slowest)</option>
-            </select>
-            <p class="ai-note" style="margin:0 0 10px">Higher effort lets DeepSeek reason longer before answering. "Medium" is the best balance.</p>
-          </div>
-
-          <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;margin:4px 0 10px">
-            <input type="checkbox" id="aiFreeCloud" onchange="updAiSettings()" style="margin-top:2px">
-            <span><b>Use free cloud AI when online and no key is set</b><br>
-            <span class="ai-note">No setup needed. Questions and class data are sent to a public AI service (text.pollinations.ai). Turn this off to keep everything on-device.</span></span>
-          </label>
 
           <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-            <button class="btn sm" onclick="aiTestConnection()">Test AI connection</button>
-            <button class="btn ghost sm" onclick="aiShowKeyHelp()">Where to get a key</button>
+            <button class="btn sm" onclick="aiInitLocal()">Load / Reload model</button>
+            <button class="btn ghost sm" onclick="aiResetLocal()">Reset AI session</button>
           </div>
-          <p class="ai-note" id="aiTestResult" style="margin:-6px 0 12px"></p>
-          <p class="ai-note" style="margin:-6px 0 12px">A key gives the best quality and control. Without one, the free cloud AI answers free-form questions when online; otherwise a rule-based offline engine handles common questions.</p>
+
+          <p class="ai-note" style="margin:-4px 0 12px"><b>Model setup:</b> copy a <code>.litertlm</code> model to the app (example):<br>
+          <code>adb push your-model.litertlm /data/data/com.callmejstn.attendance/files/model.litertlm</code><br>
+          Or place it in <code>/data/local/tmp/llm/</code>. Then tap “Load / Reload model”.</p>
 
           <h4 style="margin:12px 0 8px;font-size:14px">Auto-Email & Google Apps Script Settings</h4>
           <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:10px">
@@ -304,17 +266,19 @@
         try {
           var msgs = document.getElementById('aiMsgs');
           if (msgs && !msgs.children.length) {
+            refreshLocalAiStatus();
             var hint;
-            if (engineMode() === 'key') {
-              hint = 'Hello! I am running on <b>' + escHtml(providerLabel() + ' · ' + effectiveModel()) + '</b> and I can read everything in this app — students, every attendance record in every subject, warnings, letters, and settings. Ask me anything.';
-            } else if (engineMode() === 'free') {
-              hint = 'Hello! You are online, so I am using <b>free cloud AI</b> (no key needed) and can read every record in this app. Ask me anything. For the best quality and privacy, add a <b>DeepSeek</b> key in Settings.';
-            } else if (navigator.onLine) {
-              hint = 'You are online, but no API key is set and free cloud AI is turned off, so I am using the rule-based offline engine. Open <b>Settings</b> to add a <b>DeepSeek</b> key or turn on free cloud AI.';
+            if (localAi.state === 'ready') {
+              hint = 'Hello! I am running <b>on-device</b> with LiteRT-LM (no API key, no internet). I can read every record in this app. Ask me anything.';
+            } else if (localAi.state === 'loading') {
+              hint = 'The on-device AI model is loading. I can still answer common questions with the rule-based offline engine while it loads.';
+            } else if (localAi.state === 'missing_model') {
+              hint = 'No on-device AI model file was found. I can still answer common questions using the rule-based engine. Open <b>Settings</b> for model setup steps.';
             } else {
-              hint = 'You appear to be offline, so I am using the built-in rule-based engine. Reconnect for cloud AI, or add a key in <b>Settings</b>.';
+              hint = 'On-device AI is not loaded yet. I can answer common questions now. Open <b>Settings</b> to load a <code>.litertlm</code> model for smarter answers.';
             }
             addBotMsg(hint, true);
+            if (hasNativeAi() && localAi.state !== 'ready' && localAi.state !== 'loading') initLocalAi();
           }
         } catch (e) {}
         try { fetchInboxReplies(); } catch (e) {}
@@ -343,139 +307,99 @@
     if (ft) ft.style.display = tab === 'chat' ? 'flex' : 'none';
   };
 
-  function provider() { return window.aiConfig.provider || 'gemini'; }
-  function isOpenAICompat() { return provider() === 'openai'; }
-  function effectiveModel() {
-    var c = window.aiConfig;
-    if (isOpenAICompat()) return (c.customModel || '').trim() || 'gpt-4o-mini';
-    return c.model || (MODEL_CATALOG[provider()] || [['gemini-3.6-flash']])[0][0];
+  function aiConfigured() {
+    refreshLocalAiStatus();
+    return localAi.state === 'ready';
   }
-  function providerLabel() {
-    return provider() === 'deepseek' ? 'DeepSeek' : provider() === 'openai' ? 'OpenAI-compatible' : 'Gemini';
-  }
-  function aiConfigured() { return !!(window.aiConfig.apiKey || '').trim(); }
-  function freeCloudOn() { return window.aiConfig.freeCloud !== false; }
 
-  // key = own API key, free = keyless public AI (online), offline = rules only.
   function engineMode() {
-    if (aiConfigured()) return 'key';
-    if (freeCloudOn() && navigator.onLine) return 'free';
+    refreshLocalAiStatus();
+    if (localAi.state === 'ready') return 'local';
+    if (localAi.state === 'loading') return 'loading';
+    if (localAi.state === 'missing_model') return 'missing';
     return 'offline';
   }
 
   function updateAiStatus() {
+    refreshLocalAiStatus();
     var el = document.getElementById('aiStatus');
-    if (!el) return;
-    var mode = engineMode();
-    if (mode === 'key') {
-      el.textContent = providerLabel() + ' · ' + effectiveModel();
-      el.className = 'ai-status online';
-      el.title = 'Answers come from ' + providerLabel() + ' using your API key.';
-    } else if (mode === 'free') {
-      el.textContent = 'free cloud AI';
-      el.className = 'ai-status online';
-      el.title = 'Online: using the free public AI (no key). Add your own key in Settings for better quality.';
-    } else {
-      el.textContent = navigator.onLine ? 'offline engine (no key)' : 'offline engine';
-      el.className = 'ai-status offline';
-      el.title = navigator.onLine
-        ? 'You are online, but no API key is set and free cloud AI is turned off. Open Settings to enable one.'
-        : 'No internet connection. The offline engine handles common questions.';
+    if (el) {
+      if (localAi.state === 'ready') {
+        el.textContent = 'on-device AI';
+        el.className = 'ai-status online';
+        el.title = 'Offline on-device AI is ready.' + (localAi.modelPath ? ' Model: ' + localAi.modelPath : '');
+      } else if (localAi.state === 'loading') {
+        el.textContent = 'loading model…';
+        el.className = 'ai-status offline';
+        el.title = 'Loading the on-device model.';
+      } else if (localAi.state === 'missing_model') {
+        el.textContent = 'model missing';
+        el.className = 'ai-status offline';
+        el.title = 'No .litertlm model found on the device.';
+      } else if (localAi.state === 'error') {
+        el.textContent = 'AI error';
+        el.className = 'ai-status offline';
+        el.title = localAi.message || 'On-device AI error';
+      } else {
+        el.textContent = 'offline engine';
+        el.className = 'ai-status offline';
+        el.title = 'On-device model not loaded. Using rule-based offline engine.';
+      }
     }
-  }
 
-  function refreshModelOptions() {
-    var sel = document.getElementById('aiModel');
-    var wrap = document.getElementById('aiModelWrap');
-    var customWrap = document.getElementById('aiCustomWrap');
-    var effortWrap = document.getElementById('aiEffortWrap');
-    var p = provider();
-    if (wrap) wrap.style.display = isOpenAICompat() ? 'none' : 'block';
-    if (customWrap) customWrap.style.display = isOpenAICompat() ? 'block' : 'none';
-    if (effortWrap) effortWrap.style.display = p === 'deepseek' ? 'block' : 'none';
-    if (!sel || isOpenAICompat()) return;
-
-    var list = MODEL_CATALOG[p] || [];
-    var cur = window.aiConfig.model;
-    sel.innerHTML = list.map(function (m) {
-      return '<option value="' + escHtml(m[0]) + '">' + escHtml(m[1]) + '</option>';
-    }).join('');
-    var has = list.some(function (m) { return m[0] === cur; });
-    if (has) sel.value = cur;
-    else if (list.length) {
-      sel.value = list[0][0];
-      window.aiConfig.model = list[0][0];
-      saveAiConfig();
+    var st = document.getElementById('localAiState');
+    if (st) {
+      var label = {
+        ready: 'Ready (on-device, offline)',
+        loading: 'Loading model…',
+        missing_model: 'Model file missing',
+        error: 'Error',
+        idle: 'Not loaded',
+        unavailable: 'Unavailable'
+      }[localAi.state] || localAi.state;
+      st.textContent = label;
     }
-  }
-
-  function refreshKeyHint() {
-    var k = document.getElementById('aiApiKey');
-    var hint = document.getElementById('aiKeyHint');
-    var info = PROVIDER_INFO[provider()] || PROVIDER_INFO.gemini;
-    if (k) k.placeholder = info.keyHint;
-    if (hint) hint.innerHTML = 'Get a ' + escHtml(info.name) + ' key at <b>' + escHtml(info.where) + '</b>.';
+    var mp = document.getElementById('localAiModel');
+    if (mp) mp.textContent = localAi.modelPath ? ('Model: ' + localAi.modelPath) : '';
+    var msg = document.getElementById('localAiMsg');
+    if (msg) {
+      var text = localAi.message || '';
+      if (localAi.detail) text += (text ? '\n' : '') + localAi.detail;
+      msg.textContent = text;
+    }
   }
 
   function loadSettingsUI() {
-    var p = document.getElementById('aiProvider'); if (p) p.value = provider();
-    var k = document.getElementById('aiApiKey'); if (k) k.value = window.aiConfig.apiKey || '';
-    var e = document.getElementById('aiEffort'); if (e) e.value = window.aiConfig.effort || 'medium';
-    var b = document.getElementById('aiBaseUrl'); if (b) b.value = window.aiConfig.baseUrl || '';
-    var cm = document.getElementById('aiCustomModel'); if (cm) cm.value = window.aiConfig.customModel || '';
-    var fc = document.getElementById('aiFreeCloud'); if (fc) fc.checked = freeCloudOn();
     var a = document.getElementById('aiAutoSend'); if (a) a.checked = !!window.emc.autoSend;
     var g = document.getElementById('aiGasUrl'); if (g) g.value = window.emc.gasUrl || '';
     var ob = document.getElementById('outboxCount'); if (ob) ob.textContent = (window.emc.outbox || []).length;
-    refreshModelOptions();
-    refreshKeyHint();
-    var sel = document.getElementById('aiModel');
-    if (sel && !isOpenAICompat()) sel.value = effectiveModel();
     updateAiStatus();
   }
 
-  window.aiProviderChanged = function () {
-    var p = document.getElementById('aiProvider');
-    if (!p) return;
-    window.aiConfig.provider = p.value;
-    // Switch to that provider's default model so the selection stays valid.
-    var list = MODEL_CATALOG[window.aiConfig.provider] || [];
-    if (list.length) window.aiConfig.model = list[0][0];
-    saveAiConfig();
-    refreshModelOptions();
-    refreshKeyHint();
-    updateAiStatus();
-  };
-
-  window.aiShowKeyHelp = function () {
-    var info = PROVIDER_INFO[provider()] || PROVIDER_INFO.gemini;
-    var box = document.getElementById('aiTestResult');
-    var url = 'https://' + info.where;
-    if (box) box.innerHTML = 'Create a key at <a href="' + url + '" target="_blank" style="color:var(--red)">' + escHtml(info.where) + '</a>, then paste it above.';
-    try { window.open(url, '_blank'); } catch (e) {}
-  };
-
   window.updAiSettings = function () {
-    var p = document.getElementById('aiProvider');
-    if (p) window.aiConfig.provider = p.value;
-    window.aiConfig.apiKey = ((document.getElementById('aiApiKey') || {}).value || '').trim();
-    var sel = document.getElementById('aiModel');
-    if (sel && !isOpenAICompat() && sel.value) window.aiConfig.model = sel.value;
-    var eff = document.getElementById('aiEffort');
-    if (eff) window.aiConfig.effort = eff.value;
-    var base = document.getElementById('aiBaseUrl');
-    if (base) window.aiConfig.baseUrl = base.value.trim();
-    var cm = document.getElementById('aiCustomModel');
-    if (cm) window.aiConfig.customModel = cm.value.trim();
-    var fc = document.getElementById('aiFreeCloud');
-    if (fc) window.aiConfig.freeCloud = !!fc.checked;
     window.emc.autoSend = !!(document.getElementById('aiAutoSend') || {}).checked;
     window.emc.gasUrl = ((document.getElementById('aiGasUrl') || {}).value || '').trim();
-    saveAiConfig();
     saveEmc();
     updateAiStatus();
-    says('AI & Mail settings updated');
+    says('Settings updated');
   };
+
+  window.aiInitLocal = function () {
+    initLocalAi();
+    says('Checking on-device AI model…');
+  };
+
+  window.aiResetLocal = function () {
+    if (hasNativeAi()) try { window.AndroidApp.aiReset(); } catch (e) {}
+    history = [];
+    saveHistory();
+    says('AI session reset');
+  };
+
+  // Backward-compatible no-op handlers for old UI calls.
+  window.aiProviderChanged = function () {};
+  window.aiShowKeyHelp = function () { window.setAiTab('settings'); };
+  window.aiTestConnection = function () { window.aiInitLocal(); };
 
   // ---------------------------------------------------------------------------
   // 4. Email (fixed Blob -> base64 conversion)
@@ -706,41 +630,109 @@
     addBotMsg('Chat cleared. Ask me anything about your students, attendance, warnings or letters.');
   };
 
-  async function processAiPrompt(prompt, contextReply) {
-    var key = (window.aiConfig.apiKey || '').trim();
-    if (key && navigator.onLine) {
-      var typing = addTyping();
-      try {
-        var llmRes = await callLLM(prompt, key, contextReply);
-        if (typing && typing.parentNode) typing.parentNode.removeChild(typing);
-        addBotMsg(llmRes);
-        history.push({ role: 'user', text: prompt });
-        history.push({ role: 'model', text: llmRes });
-        saveHistory();
-        return;
-      } catch (e) {
-        console.warn(providerLabel() + ' failed, falling back to offline engine:', e);
-        if (typing && typing.parentNode) typing.parentNode.removeChild(typing);
-        addBotMsg('<span class="ai-note">⚠ ' + escHtml(providerLabel()) + ' could not answer (' + escHtml(e.message) + '). Using the offline engine. Check your key and model in Settings.</span>', true);
-      }
+  function buildAiPrompt(prompt, contextReply) {
+    var ctx = buildAppContext();
+    var parts = [];
+    parts.push('You are the built-in on-device AI assistant of "Bayan at Batas - Attendance".');
+    parts.push('Use ONLY the APP DATA below. Never invent students, records, dates, or numbers.');
+    parts.push('Answer clearly and specifically. Include names, IDs, counts, dates, and subjects when relevant.');
+    parts.push('If the user asks to perform an action (mark attendance, create letter), explain the exact command they can type.');
+    parts.push('Reply in the same language as the user (English or Filipino).');
+    parts.push('');
+    parts.push('APP DATA (' + (ctx.compact ? 'compact' : 'full') + '):');
+    parts.push(ctx.text);
+    if (contextReply) {
+      parts.push('');
+      parts.push('APPEAL EMAIL TO ANALYZE:');
+      parts.push(JSON.stringify({ from: contextReply.from, subject: contextReply.subject, body: contextReply.body, refId: contextReply.refId || null, date: contextReply.date }));
     }
+    var recent = history.slice(-8);
+    if (recent.length) {
+      parts.push('');
+      parts.push('RECENT CHAT:');
+      recent.forEach(function (h) { parts.push((h.role === 'user' ? 'User' : 'Assistant') + ': ' + String(h.text || '').slice(0, 600)); });
+    }
+    parts.push('');
+    parts.push('USER QUESTION:');
+    parts.push(String(prompt || ''));
+    return parts.join('\n');
+  }
 
-    // No key, but online: use the keyless free cloud AI automatically.
-    if (!key && navigator.onLine && freeCloudOn()) {
-      var freeTyping = addTyping();
+  function handleLocalAiEvent(ev) {
+    if (!ev) return;
+    if (ev.t === 'status') {
       try {
-        var freeRes = await callFreeCloudLLM(prompt, contextReply);
-        if (freeTyping && freeTyping.parentNode) freeTyping.parentNode.removeChild(freeTyping);
-        addBotMsg(freeRes);
+        var s = JSON.parse(ev.status || '{}');
+        localAi.state = s.state || localAi.state;
+        localAi.message = s.message || '';
+        localAi.detail = s.detail || '';
+        localAi.modelPath = s.modelPath || '';
+        localAi.searched = Array.isArray(s.searched) ? s.searched : [];
+      } catch (e) {}
+      updateAiStatus();
+      return;
+    }
+    if (!ev.id) return;
+    var p = localAi.pending[ev.id];
+    if (!p) return;
+    if (ev.t === 'chunk') {
+      p.raw += String(ev.text || '');
+      if (p.bubble) p.bubble.innerHTML = '<div class="ai-bubble">' + fmtAi(p.raw) + '</div>';
+      var m = document.getElementById('aiMsgs'); if (m) m.scrollTop = m.scrollHeight;
+      return;
+    }
+    if (ev.t === 'done') {
+      var txt = (p.raw || '').trim();
+      if (!txt) txt = 'The on-device model returned an empty answer.';
+      p.done(txt);
+      delete localAi.pending[ev.id];
+      updateAiStatus();
+      return;
+    }
+    if (ev.t === 'error') {
+      p.error(new Error(ev.msg || 'On-device AI error'));
+      delete localAi.pending[ev.id];
+      updateAiStatus();
+    }
+  }
+  window.__aiNativeEvent = handleLocalAiEvent;
+
+  function callLocalAi(prompt, contextReply) {
+    return new Promise(function (resolve, reject) {
+      if (!hasNativeAi()) { reject(new Error('On-device AI bridge unavailable')); return; }
+      refreshLocalAiStatus();
+      if (localAi.state === 'missing_model') { reject(new Error(localAi.message || 'No .litertlm model file found on the device.')); return; }
+      var id = 'ai_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      var bubble = addBotMsg('<span class="ai-note">Thinking on-device…</span>', true);
+      localAi.pending[id] = { bubble: bubble, raw: '', done: resolve, error: reject };
+      try { window.AndroidApp.aiGenerate(id, buildAiPrompt(prompt, contextReply)); }
+      catch (e) { delete localAi.pending[id]; reject(e); }
+    });
+  }
+
+  async function processAiPrompt(prompt, contextReply) {
+    refreshLocalAiStatus();
+    if (hasNativeAi() && localAi.state !== 'ready' && localAi.state !== 'loading') {
+      initLocalAi();
+      refreshLocalAiStatus();
+    }
+    if (hasNativeAi() && localAi.state === 'ready') {
+      try {
+        var localRes = await callLocalAi(prompt, contextReply);
         history.push({ role: 'user', text: prompt });
-        history.push({ role: 'model', text: freeRes });
+        history.push({ role: 'model', text: localRes });
         saveHistory();
+        updateAiStatus();
         return;
       } catch (e) {
-        console.warn('Free cloud AI failed, using offline engine:', e);
-        if (freeTyping && freeTyping.parentNode) freeTyping.parentNode.removeChild(freeTyping);
-        addBotMsg('<span class="ai-note">⚠ Free cloud AI is unavailable right now (' + escHtml(e.message) + '). I used the offline engine. Add your own key in Settings for reliable smart answers.</span>', true);
+        console.warn('Local AI failed, falling back to offline engine:', e);
+        addBotMsg('<span class="ai-note">⚠ On-device AI could not answer (' + escHtml(e.message || 'error') + '). Using the rule-based offline engine.</span>', true);
+        updateAiStatus();
       }
+    } else if (localAi.state === 'loading') {
+      addBotMsg('<span class="ai-note">The on-device model is still loading. I used the rule-based offline engine for now. Try again in a moment for a smarter answer.</span>', true);
+    } else if (localAi.state === 'missing_model') {
+      addBotMsg('<span class="ai-note">⚠ No on-device AI model file was found. I used the rule-based offline engine. Open <b>Settings</b> for model setup instructions.</span>', true);
     }
 
     var offlineRes = runOfflineAiEngine(prompt, contextReply);
@@ -749,8 +741,6 @@
     history.push({ role: 'model', text: 'Offline answer: ' + offlineRes.replace(/<[^>]+>/g, '') });
     saveHistory();
   }
-
-  // ---------------------------------------------------------------------------
   // 7. Full-app data context
   // ---------------------------------------------------------------------------
   function buildDataModel(compact) {
@@ -889,323 +879,6 @@
     }
     return { text: json, compact: false };
   }
-
-  // ---------------------------------------------------------------------------
-  // 8. Gemini call
-  // ---------------------------------------------------------------------------
-  function buildSystemPrompt(contextReply, ctxText, isCompact) {
-    var ctx = ctxText ? { text: ctxText, compact: !!isCompact } : buildAppContext();
-    var appeal = '';
-    if (contextReply) {
-      appeal = '\n\nAppeal email to analyze:\n' + JSON.stringify({
-        from: contextReply.from,
-        subject: contextReply.subject,
-        body: contextReply.body,
-        refId: contextReply.refId || null,
-        date: contextReply.date
-      });
-    }
-
-    return [
-      'You are the built-in AI assistant of "Bayan at Batas - Attendance", an Android app for a class adviser.',
-      'You have COMPLETE READ ACCESS to the app data provided below: every student, every attendance record in every subject, every warning, every letter, and today\'s snapshot.',
-      'Rules:',
-      '1. Answer using the provided data. Never invent students, records, dates or numbers. If something is not in the data, say so plainly.',
-      '2. When the user asks about "today", use the todaySnapshot and today\'s date. When asked to compare, compute from the data.',
-      '3. Be specific: include student names, IDs, counts, dates and subjects. Use short paragraphs or bullet lists.',
-      '4. If the user asks you to perform an action (mark attendance, create a letter), explain the exact command they can type; the app executes actions only through its offline command engine.',
-      '5. Reply in the language the user writes in (English or Filipino).',
-      '6. Keep answers focused and reasonably short unless a full report is requested.',
-      '7. For appeal emails, evaluate the reason, the student\'s record, and recommend Grant Appeal or Endorse to SAO, then draft a reply.',
-      '',
-      'APP GUIDE: ' + JSON.stringify(buildDataModel(true).appGuide),
-      '',
-      'APP DATA (' + (ctx.compact ? 'compact' : 'full') + '):',
-      ctx.text
-    ].join('\n') + appeal;
-  }
-
-  function chatCompletionsUrl(baseUrl) {
-    var b = String(baseUrl || '').trim().replace(/\/+$/, '');
-    if (/\/chat\/completions$/i.test(b)) return b;
-    return b + '/chat/completions';
-  }
-
-  // Shared OpenAI-style caller: used by DeepSeek and any compatible endpoint.
-  async function callChatCompletions(opts) {
-    var messages = [{ role: 'system', content: buildSystemPrompt(opts.contextReply) }];
-    history.slice(-12).forEach(function (h) {
-      if (h && h.text) messages.push({ role: h.role === 'user' ? 'user' : 'assistant', content: String(h.text) });
-    });
-    messages.push({ role: 'user', content: opts.prompt });
-
-    var body = {
-      model: opts.model,
-      messages: messages,
-      stream: false,
-      max_tokens: 4096,
-      temperature: 0.3
-    };
-    // DeepSeek: "none" disables thinking; low/high/max deepen the reasoning.
-    if (opts.reasoningEffort) body.reasoning_effort = opts.reasoningEffort;
-
-    var res = await fetch(chatCompletionsUrl(opts.baseUrl), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + opts.apiKey
-      },
-      body: JSON.stringify(body)
-    });
-
-    var raw = await res.text();
-    var data;
-    try { data = JSON.parse(raw); } catch (e) {
-      throw new Error('unreadable response (HTTP ' + res.status + ')');
-    }
-
-    if (!res.ok) {
-      var msg = (data && data.error && (data.error.message || data.error)) || ('HTTP ' + res.status);
-      if (res.status === 401 || res.status === 403) msg = 'Invalid or unauthorized API key. Check it in Settings.';
-      else if (res.status === 402) msg = 'Your DeepSeek balance is empty. Top up at platform.deepseek.com.';
-      else if (res.status === 429) msg = 'Rate limit reached. Wait a moment and try again.';
-      else if (res.status === 400 && /model/i.test(String(msg))) msg = msg + ' — check the model name in Settings.';
-      throw new Error(String(msg));
-    }
-
-    var ch = data.choices && data.choices[0];
-    var text = ch && ch.message && ch.message.content;
-    if (!text) {
-      if (ch && ch.finish_reason === 'length') throw new Error('the answer was cut off before any text was returned; try again or lower the thinking effort.');
-      throw new Error('the AI service returned an empty answer');
-    }
-    return String(text).trim();
-  }
-
-  // Compact context for the free tier (smaller prompt, still every student).
-  function buildFreeDataContext() {
-    var m = buildDataModel(true);
-    m.subjects = (m.subjects || []).map(function (s) {
-      var dates = Object.keys(s.attendanceByDate || {}).sort();
-      if (dates.length > 60) {
-        var keep = {};
-        dates.slice(-60).forEach(function (d) { keep[d] = s.attendanceByDate[d]; });
-        s.attendanceByDate = keep;
-      }
-      return s;
-    });
-    m.warnings = (m.warnings || []).slice(-150);
-    m.letters = (m.letters || []).slice(-150);
-    var text = JSON.stringify(m);
-    if (text.length > 90000) {
-      text = JSON.stringify({
-        app: m.app, today: m.today, currentSubject: m.currentSubject,
-        studentCount: m.studentCount, subjectCount: m.subjectCount,
-        warningCount: m.warningCount, letterCount: m.letterCount,
-        students: m.students, todaySnapshot: m.todaySnapshot, appGuide: m.appGuide
-      });
-    }
-    return { text: text, compact: true };
-  }
-
-  // Keyless public AI (OpenAI-compatible). Used when online with no API key.
-  async function callFreeCloudLLM(prompt, contextReply) {
-    var ctx = buildFreeDataContext();
-    var messages = [{ role: 'system', content: buildSystemPrompt(contextReply, ctx.text, true) }];
-    history.slice(-8).forEach(function (h) {
-      if (h && h.text) messages.push({ role: h.role === 'user' ? 'user' : 'assistant', content: String(h.text) });
-    });
-    messages.push({ role: 'user', content: prompt });
-
-    var res = await fetch('https://text.pollinations.ai/openai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'openai',
-        messages: messages,
-        stream: false,
-        max_tokens: 2048,
-        temperature: 0.3
-      })
-    });
-
-    var raw = await res.text();
-    var data;
-    try { data = JSON.parse(raw); } catch (e) {
-      throw new Error('unreadable response (HTTP ' + res.status + ')');
-    }
-    if (!res.ok) {
-      throw new Error((data && data.error && data.error.message) || ('HTTP ' + res.status));
-    }
-    var ch = data.choices && data.choices[0];
-    var text = ch && ch.message && ch.message.content;
-    if (!text) throw new Error('the free AI returned an empty answer');
-    return String(text).trim();
-  }
-
-  async function callLLM(prompt, apiKey, contextReply) {
-    var p = provider();
-    if (p === 'deepseek') {
-      return callChatCompletions({
-        baseUrl: 'https://api.deepseek.com',
-        apiKey: apiKey,
-        model: effectiveModel(),
-        prompt: prompt,
-        contextReply: contextReply,
-        reasoningEffort: window.aiConfig.effort || 'medium'
-      });
-    }
-    if (p === 'openai') {
-      return callChatCompletions({
-        baseUrl: (window.aiConfig.baseUrl || 'https://api.openai.com/v1'),
-        apiKey: apiKey,
-        model: effectiveModel(),
-        prompt: prompt,
-        contextReply: contextReply,
-        reasoningEffort: null
-      });
-    }
-    return callGeminiLLM(prompt, apiKey, contextReply);
-  }
-
-  async function callGeminiLLM(prompt, apiKey, contextReply) {
-    var system = buildSystemPrompt(contextReply);
-    var model = effectiveModel();
-
-    var contents = [];
-    var recent = history.slice(-12);
-    recent.forEach(function (h) {
-      if (!h || !h.text) return;
-      contents.push({ role: h.role === 'user' ? 'user' : 'model', parts: [{ text: String(h.text) }] });
-    });
-    contents.push({ role: 'user', parts: [{ text: prompt }] });
-
-    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
-      encodeURIComponent(model) + ':generateContent';
-
-    var body = {
-      system_instruction: { parts: [{ text: system }] },
-      contents: contents,
-      generationConfig: {
-        temperature: 0.35,
-        topP: 0.95,
-        maxOutputTokens: 4096
-      }
-    };
-
-    var payload = JSON.stringify(body);
-    var res;
-    try {
-      // Preferred: key in a header (keeps it out of URLs and logs).
-      res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-        body: payload
-      });
-    } catch (e) {
-      // Some WebViews reject custom headers via CORS; retry with ?key=.
-      res = await fetch(url + '?key=' + encodeURIComponent(apiKey), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: payload
-      });
-    }
-
-    var raw = await res.text();
-    var data;
-    try { data = JSON.parse(raw); } catch (e) {
-      throw new Error('the AI service returned an unreadable response (HTTP ' + res.status + ')');
-    }
-
-    if (!res.ok) {
-      var msg = (data && data.error && data.error.message) || ('HTTP ' + res.status);
-      if (res.status === 400 && /API key not valid/i.test(msg)) msg = 'That API key is not valid. Check it in Settings.';
-      if (res.status === 403) msg = msg + ' (check that the Generative Language API is enabled for this key)';
-      if (res.status === 429) msg = 'Too many requests right now. Wait a few seconds and try again.';
-      throw new Error(msg);
-    }
-
-    if (data.promptFeedback && data.promptFeedback.blockReason) {
-      throw new Error('request blocked by the AI service: ' + data.promptFeedback.blockReason);
-    }
-
-    var cand = data.candidates && data.candidates[0];
-    if (!cand || !cand.content || !cand.content.parts || !cand.content.parts.length) {
-      if (cand && cand.finishReason && cand.finishReason !== 'STOP') {
-        throw new Error('the model stopped early (' + cand.finishReason + ')');
-      }
-      throw new Error('the AI service returned an empty answer');
-    }
-
-    var text = cand.content.parts.map(function (p) { return p.text || ''; }).join('').trim();
-    if (!text) throw new Error('the AI service returned an empty answer');
-    return text;
-  }
-
-  window.aiTestConnection = async function () {
-    var box = document.getElementById('aiTestResult');
-    var key = (window.aiConfig.apiKey || '').trim();
-
-    if (!key) {
-      if (!freeCloudOn()) { if (box) box.textContent = 'Enter an API key, or turn on free cloud AI.'; return; }
-      if (!navigator.onLine) { if (box) box.textContent = 'You are offline. Connect to the internet to test free cloud AI.'; return; }
-      if (box) box.textContent = 'Testing free cloud AI (no key)…';
-      try {
-        var fres = await fetch('https://text.pollinations.ai/openai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'openai', messages: [{ role: 'user', content: 'Reply with the single word OK.' }], max_tokens: 16 })
-        });
-        var fdata = await fres.json().catch(function () { return {}; });
-        if (!fres.ok) throw new Error((fdata.error && fdata.error.message) || ('HTTP ' + fres.status));
-        var freply = fdata.choices && fdata.choices[0] && fdata.choices[0].message && fdata.choices[0].message.content;
-        if (box) box.textContent = '✔ Free cloud AI is working' + (freply ? ' — it replied.' : '') + ' (no key).';
-      } catch (e) {
-        if (box) box.textContent = '✖ Free cloud AI: ' + e.message;
-      }
-      return;
-    }
-
-    if (box) box.textContent = 'Testing ' + providerLabel() + ' (' + effectiveModel() + ')…';
-    try {
-      var p = provider();
-      var res, data;
-
-      if (p === 'deepseek' || p === 'openai') {
-        var base = p === 'deepseek' ? 'https://api.deepseek.com' : (window.aiConfig.baseUrl || 'https://api.openai.com/v1');
-        var body = { model: effectiveModel(), messages: [{ role: 'user', content: 'Reply with the single word OK.' }], max_tokens: 32, stream: false };
-        if (p === 'deepseek') body.reasoning_effort = 'none';
-        res = await fetch(chatCompletionsUrl(base), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-          body: JSON.stringify(body)
-        });
-        data = await res.json().catch(function () { return {}; });
-        if (!res.ok) {
-          var m = (data.error && data.error.message) || ('HTTP ' + res.status);
-          if (res.status === 401 || res.status === 403) m = 'Invalid or unauthorized API key.';
-          if (res.status === 402) m = 'The account has no balance.';
-          throw new Error(m);
-        }
-        var reply = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-        if (box) box.textContent = '✔ Connected to ' + providerLabel() + ' · ' + effectiveModel() + (reply ? ' — it replied.' : '.');
-        return;
-      }
-
-      var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(effectiveModel()) + ':generateContent';
-      var testBody = JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Reply with the single word OK.' }] }], generationConfig: { maxOutputTokens: 16 } });
-      try {
-        res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body: testBody });
-      } catch (e) {
-        res = await fetch(url + '?key=' + encodeURIComponent(key), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: testBody });
-      }
-      data = await res.json();
-      if (!res.ok) throw new Error((data.error && data.error.message) || ('HTTP ' + res.status));
-      if (box) box.textContent = '✔ Connected to Gemini · ' + effectiveModel() + '.';
-    } catch (e) {
-      if (box) box.textContent = '✖ ' + e.message;
-    }
-  };
 
   // ---------------------------------------------------------------------------
   // 9. Offline engine (works with no API key; reads the whole dataset)
@@ -1375,7 +1048,7 @@
         '• Rankings: most lates, most absences, most warnings<br>' +
         '• Letters: list and counts by type<br>' +
         '• Actions: mark a student (or the whole class) present/late/absent, create warning letters<br><br>' +
-        'Add a Gemini API key in Settings for free-form questions and deeper analysis.';
+        'Load a .litertlm model in Settings for free-form on-device answers.';
     }
     if (/^(thanks|thank you|salamat)\b/.test(p)) return "You're welcome!";
 
@@ -1540,13 +1213,9 @@
     buildDataModel: buildDataModel,
     buildAppContext: buildAppContext,
     runOfflineAiEngine: runOfflineAiEngine,
-    callLLM: callLLM,
-    callGeminiLLM: callGeminiLLM,
-    callFreeCloudLLM: callFreeCloudLLM,
-    buildFreeDataContext: buildFreeDataContext,
-    effectiveModel: effectiveModel,
-    provider: provider,
-    engineMode: engineMode
+    buildAiPrompt: buildAiPrompt,
+    engineMode: engineMode,
+    localAi: function(){ return localAi; }
   };
 
   // ---------------------------------------------------------------------------
