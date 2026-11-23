@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>QR Attendance</title>
 <meta name="theme-color" content="#800000">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,7 +16,7 @@
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--red:#c25a5a;--red-d:#800000;--red-l:#3a1f1f;--bg:#161111;--card:#211919;--tx:#f5eded;--mu:#a99a9a;--bd:#352828;--ok:#66bb6a;--warn:#ffb74d;color-scheme:dark}}
 :root[data-theme="dark"]{--red:#c25a5a;--red-d:#800000;--red-l:#3a1f1f;--bg:#161111;--card:#211919;--tx:#f5eded;--mu:#a99a9a;--bd:#352828;--ok:#66bb6a;--warn:#ffb74d;color-scheme:dark}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}html,body{overscroll-behavior-y:none}*{-webkit-tap-highlight-color:transparent}html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text}img{-webkit-user-drag:none}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45}
 button{font:inherit;cursor:pointer}
@@ -150,11 +150,11 @@ td{padding:11px 8px;border-bottom:1px solid var(--bd)}
 #records td:nth-child(6){grid-area:x}
 .rsec .rbody{padding:0 10px 12px}.dayd{padding:2px 8px 10px}.dh{padding:11px 10px}}
 
-#toasts{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;z-index:60;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;max-width:calc(100vw - 24px)}
-.toast{pointer-events:auto;display:flex;gap:10px;align-items:center;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-left:5px solid var(--ok);border-radius:14px;padding:11px 14px;font-size:14px;font-weight:600;line-height:1.3;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:min(92vw,340px);animation:tin .22s ease-out;cursor:pointer;word-break:break-word}
-.toast.warn{border-left-color:var(--warn)}.toast.bad{border-left-color:#c62828}.toast.info{border-left-color:var(--red)}
+#toasts{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;z-index:99999;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none;max-width:calc(100vw - 24px)}
+.toast{pointer-events:auto;display:flex;gap:10px;align-items:center;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-left:5px solid var(--ok);border-radius:14px;padding:12px 16px;font-size:14px;font-weight:600;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:min(92vw,340px);animation:tin .22s ease-out;cursor:pointer;word-break:break-word}
+.toast.warn{border-left-color:var(--warn)}.toast.bad{border-left-color:#d32f2f}.toast.info{border-left-color:var(--red)}
 .toast .ti{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;color:#fff;background:var(--ok)}
-.toast.warn .ti{background:var(--warn)}.toast.bad .ti{background:#c62828}.toast.info .ti{background:var(--red)}
+.toast.warn .ti{background:var(--warn)}.toast.bad .ti{background:#d32f2f}.toast.info .ti{background:var(--red)}
 .toast.out{opacity:0;transform:translateX(24px);transition:.25s}
 @keyframes tin{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
 .rsec{padding:0;margin-bottom:12px;overflow:hidden}
@@ -211,35 +211,9 @@ summary{font-weight:700;margin:6px 0 12px;cursor:pointer;color:var(--red)}
 .sgpv{width:160px;height:68px;border:1px dashed var(--bd);border-radius:12px;background:#fff;display:grid;place-items:center;font-size:12px;color:#7a6b6b;overflow:hidden;flex:none}
 .sgpv img{max-width:100%;max-height:100%;display:block}
 .sgbtns{display:flex;gap:8px;flex-wrap:wrap}.sgbtns .btn{width:auto}
-#sgModal,#stModal,#emModal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:80;display:none;place-items:center;padding:16px}
-#sgModal.on,#stModal.on,#emModal.on{display:grid}
-#stModal .sgcard,#emModal .sgcard{max-height:92vh;overflow:auto}
-#emModal{z-index:95}
-#emModal details{margin:2px 0 14px;border:1px solid var(--bd);border-radius:12px;padding:10px 12px}#emModal summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--mu)}#emModal details[open] summary{margin-bottom:10px}
-#emModal details ol{margin:0 0 10px;padding-left:18px;font-size:12px;color:var(--mu)}#emModal details code{background:var(--red-l);color:var(--red);padding:1px 5px;border-radius:6px;font-size:11px}
-#lpFootView{flex-wrap:wrap}#lpFootView .btn{flex:1 1 calc(50% - 8px);font-size:14px}
-@media (min-width:700px){#lpFootView .btn{flex:1 1 0}}
-.wtabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:5px;margin-bottom:12px}
-.wtabs button{flex:1;border:0;background:transparent;color:var(--mu);font-weight:700;font-size:14px;padding:11px 6px;border-radius:10px;white-space:nowrap}
-.wtabs button.on{background:var(--red);color:#fff}
-.wtabs i{font-style:normal;font-size:11px;opacity:.85;margin-left:4px}
-#letQ{margin-bottom:10px}
-.lcard{padding:14px 0;border-bottom:1px solid var(--bd)}.lcard:last-child{border-bottom:0}
-.lhead{display:flex;align-items:flex-start;gap:12px}.lhead .grow{flex:1;min-width:0}
-.lhead b{display:block;word-break:break-word}.lhead .m{display:block;color:var(--mu);font-size:12px;margin-top:2px}
-.lhead .grow .tag{display:inline-block}.lsao{margin-top:10px}.lsao .btn{width:100%}
-.lacts{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-.lact,.lxtra{display:flex;gap:8px}.lacts .btn{flex:1 1 0;min-width:0;width:auto;padding:11px 8px;font-size:14px;white-space:nowrap}
-.lxtra{display:none}.lcard.open .lxtra{display:flex}
-.lcard.open .lmore{background:var(--red-l)}
-@media (min-width:700px){.lacts{flex-direction:row;flex-wrap:wrap;padding-left:50px;margin-top:6px}.lacts .btn{flex:0 0 auto;padding:9px 14px}.lxtra{display:flex}.lmore{display:none}}
-@media (max-width:859px){.lsticky{position:sticky;bottom:calc(68px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--bd);padding:10px 0 4px;margin-top:14px!important;z-index:4}}
-@media (min-width:860px){
-#students .two{align-items:start}
-#students .two>.card{height:var(--stH,calc(100vh - 220px));overflow-y:auto;overscroll-behavior:contain}
-#students .two>.card:last-child{display:flex;flex-direction:column;overflow:hidden}
-#stList{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:6px}
-}
+#sgModal,#stModal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:80;display:none;place-items:center;padding:16px}
+#sgModal.on,#stModal.on{display:grid}
+#stModal .sgcard{max-height:92vh;overflow:auto}
 .stopt{display:block;width:100%;text-align:left;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:12px;padding:10px 12px;margin-bottom:8px;font:inherit;cursor:pointer}.stopt b{display:block}.stopt span{display:block;font-size:12px;color:var(--mu);margin-top:2px}.stopt.on{border-color:var(--red);background:var(--red-l)}
 .lfilt{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-top:12px}.lfb{flex:none;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}.lfb i{font-style:normal;opacity:.7;margin-left:2px}.lfb.on{background:var(--red);border-color:var(--red);color:#fff}
 .t-app{background:#dcebfb;color:#17508a}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .t-app{background:#182f48;color:#9ecbf5}}:root[data-theme="dark"] .t-app{background:#182f48;color:#9ecbf5}
@@ -262,6 +236,9 @@ summary{font-weight:700;margin:6px 0 12px;cursor:pointer;color:var(--red)}
 .lpcv{width:100%;max-width:680px;height:auto;background:#fff;box-shadow:0 4px 18px rgba(0,0,0,.45);flex:none}
 .sgcard{background:var(--card);border-radius:18px;padding:16px;width:min(100%,520px)}
 #sgCv{width:100%;aspect-ratio:13/5;background:#fff;border:1px solid var(--bd);border-radius:12px;touch-action:none;display:block;margin-bottom:12px}
+/* keep every screen inside the phone width: long names are cut with ... instead of widening the page */
+html,body{max-width:100%;overscroll-behavior-x:none}body{overflow-x:clip}
+.grid>*,.card,.screen,.row,.grow{min-width:0;max-width:100%}
 </style>
 </head>
 <body>
@@ -276,7 +253,8 @@ summary{font-weight:700;margin:6px 0 12px;cursor:pointer;color:var(--red)}
  <div class="classnote" id="classNote"></div>
 
  <!-- HOME -->
- <section class="screen on" id="home">
+  <section class="screen on" id="home">
+  <p class="hint" id="nfcHomeStat" style="margin:0 0 10px;display:none"></p>
   <div class="grid stats">
    <div class="card stat hero"><b id="hP">0/0</b><span>Present · <i id="dshort" style="font-style:normal">today</i></span></div>
    <div class="card stat"><b id="hL">0</b><span>Late</span></div>
@@ -291,7 +269,8 @@ summary{font-weight:700;margin:6px 0 12px;cursor:pointer;color:var(--red)}
      <button class="btn" onclick="go('scan')">Scan QR</button>
      <button class="btn ghost" onclick="go('students')">Add student</button>
      <button class="btn ghost" onclick="go('records')">Export sheet</button>
-     <button class="btn ghost" onclick="go('warn')">Warnings</button></div></div>
+     <button class="btn ghost" onclick="go('warn')">Warnings</button>
+     <button class="btn" style="background:var(--red,#800000);color:#fff;grid-column:1/-1" onclick="toggleAiDrawer()">✨ AI Assistant & Mail</button></div></div>
     <div class="card"><h2>Your data</h2><p class="hint" style="margin:0 0 10px">Saved on this device automatically. Download a backup now and then.</p><div class="btns"><button class="btn ghost sm" onclick="backup()">Download backup</button><label class="btn ghost sm" style="text-align:center">Restore<input type="file" accept=".json,application/json" hidden onchange="restore(this)"></label></div><p class="hint" id="dataMsg"></p></div>
     <div class="card" id="phClean" style="display:none"><h2>Old student photos</h2><p class="hint" style="margin:0 0 10px">The photo feature was removed. Photos saved earlier are still stored on this device and in your private repository. Delete them now?</p><div class="btns"><button class="btn sm" onclick="cleanPhotos()">Delete saved photos</button><button class="btn ghost sm" onclick="phHide=true;showPhotoCleanup()">Keep for now</button></div></div>
     <div class="card"><h2>Cloud sync</h2><p class="hint" id="syncState" style="margin:0 0 10px">Not set up. Your data is only on this device.</p>
@@ -313,6 +292,7 @@ summary{font-weight:700;margin:6px 0 12px;cursor:pointer;color:var(--red)}
         <p class="hint" id="appVer" style="text-align:center;margin:6px 0 0"></p>
     <button class="btn ghost" id="nfcBtn" style="margin-top:10px" onclick="toggleNfcScan()">NFC card scanning: OFF</button>
     <p class="hint" id="nfcStat" style="text-align:center;margin:6px 0 0"></p>
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost" id="voiceBtn" style="flex:1" onclick="toggleVoice()">Voice: ON</button><button class="btn ghost" id="voiceModeBtn" style="flex:1" onclick="toggleVoiceMode()">Say: Last name</button></div>
     <label class="btn ghost" style="display:block;text-align:center;margin-top:10px">Scan from photo<input type="file" accept="image/*" capture="environment" hidden onchange="scanPhoto(this)"></label>
     <div class="card" style="margin-top:12px"><h2>Or type the ID number</h2>
      <div style="display:flex;gap:8px"><input id="manId" placeholder="ID number or full name" style="margin:0" onkeydown="if(event.key==='Enter')manual()"><button class="btn sm" onclick="manual()">Record</button></div>
@@ -337,19 +317,23 @@ summary{font-weight:700;margin:6px 0 12px;cursor:pointer;color:var(--red)}
     <div class="two" style="gap:0 12px"><div><label>Section</label><input id="stSec" value="BSIT I-A"></div><div><label>Contact number</label><input id="stPh" type="tel" placeholder="0917 000 0000"></div></div>
     <label>Email (optional)</label><input id="stEm" type="email" placeholder="name@example.com">
     <label>NFC card <span style="font-weight:400">(optional · Android phone with NFC)</span></label>
-    <div class="phrow"><div class="nfcbox" id="nfcBox">No card linked</div><div class="phbtns"><button type="button" class="btn ghost sm" id="nfcLink" onclick="linkCard()">Add card (write ID)</button><button type="button" class="btn ghost sm" onclick="nfcAllow(nfcMsg)">Allow NFC</button><button type="button" class="btn ghost sm" id="nfcRm" style="display:none" onclick="unlinkCard()">Unlink card</button></div></div>
-    <p class="hint" style="margin:-4px 0 4px">Tap Add card, then hold the card flat on the back of the phone until it says it is written. Use NTAG213 or NTAG215 cards. The first time, your phone will ask to allow NFC: tap Allow. The card only holds the ID number and a link, not the name.</p>
+    <div class="phrow"><div class="nfcbox" id="nfcBox">No card linked</div><div class="phbtns"><button type="button" class="btn ghost sm" id="nfcLink" onclick="linkCard()">Add card (write ID)</button><button type="button" class="btn ghost sm" id="nfcRead" onclick="readCardId()">Read card ID (link only)</button><button type="button" class="btn ghost sm" id="nfcCheck" onclick="checkCard()">Check card</button><button type="button" class="btn ghost sm" id="nfcAllowBtn" onclick="nfcAllow(nfcMsg)">Allow NFC</button><button type="button" class="btn ghost sm" id="nfcRm" style="display:none" onclick="unlinkCard()">Unlink card</button></div></div>
+    <p class="hint" id="nfcHint" style="margin:-4px 0 4px">Tap Add card, then hold the card flat on the back of the phone until it says it is written. Use NTAG213 or NTAG215 cards. The first time, your phone will ask to allow NFC: tap Allow. The card only holds the ID number and a link, not the name.</p>
     <div class="phrow" style="margin:0 0 6px"><input id="nfcUrl" readonly placeholder="Tap Create link" style="margin:0;font-size:12px"><button type="button" class="btn ghost sm" id="urlBtn" onclick="linkBtn()">Create link</button></div>
-    <p class="hint" style="margin:0 0 4px"><b>MIFARE Classic cards (NFC Tools shows “Mifare Classic”), or iPhone:</b> the Add card button cannot write these. Use the link instead. 1) Press Save student. 2) Tap Copy link. 3) In NFC Tools open Write, Add a record, URL/URI, choose https:// and paste the link without its https:// part, then Write and hold the card to the phone. After that, tapping the card on the phone opens the app and records the student.</p>
+    <p class="hint" id="nfcHint2" style="margin:0 0 4px"><b>MIFARE Classic cards (NFC Tools shows “Mifare Classic”), or iPhone:</b> the Add card button cannot write these. Use the link instead. 1) Press Save student. 2) Tap Copy link. 3) In NFC Tools open Write, Add a record, URL/URI, choose https:// and paste the link without its https:// part, then Write and hold the card to the phone. After that, tapping the card on the phone opens the app and records the student.</p>
     <p class="hint" id="nfcMsg" style="margin:0 0 10px"></p>
     <div class="qcard"><div class="qr" id="qr"></div><div class="qln" id="qLn">LAST NAME</div><div class="qid" id="qId">ID NUMBER</div></div>
     <div class="btns" style="margin-top:12px"><button class="btn" id="stSave" onclick="saveStudent()">Save student</button><button class="btn ghost" onclick="dlQR()">Download QR card</button></div>
     <button class="btn ghost" id="stCancel" style="display:none;margin-top:10px" onclick="cancelEdit()">Cancel edit</button>
     <p class="hint" id="stMsg"></p></div>
    <div class="card"><h2>Student list <span class="chip" id="stCount" style="margin-left:6px">0</span></h2>
-    <input id="stSearch" placeholder="Search name or ID" oninput="drawStudents()">
-    <div class="btns" style="margin-bottom:6px"><button class="btn ghost sm" onclick="dlPdf()">Print sheet (PDF)</button><button class="btn ghost sm" onclick="dlZip()">All QR codes (ZIP)</button></div><p class="hint" style="margin:0 0 10px">The PDF is 8.5 × 13 in with 12 cards per page.</p>
-    <div id="stList"></div>
+    <div id="iosBox" style="display:none;background:var(--red-l);border-radius:12px;padding:12px;margin:0 0 12px"><b style="display:block;margin-bottom:6px">iPhone: tap-and-record shortcut</b><ol style="margin:0 0 10px;padding-left:20px;font-size:13px;line-height:1.5"><li>Tap <b>Shortcut</b> beside a student. Their link is copied.</li><li>Open Shortcuts, then Automation, then <b>+</b>, then <b>NFC</b>.</li><li>Tap <b>Scan</b> and hold that student's card to the phone. Name it, then tap Next.</li><li>Add the <b>Open URLs</b> action and paste the link. Tap Next.</li><li>Choose <b>Run Immediately</b>, turn off <b>Notify When Run</b>, then Done.</li></ol><button type="button" class="btn ghost sm" onclick="openShortcutsApp()">Open Shortcuts app</button></div>
+    <input id="stSearch" placeholder="Search by student name or ID..." oninput="drawStudents()">
+    <select id="stSelect" style="margin-top:6px;width:100%" onchange="selectStudent(this.value)"></select>
+    <div id="stQuickPick" class="scroll" style="max-height:200px;overflow-y:auto;margin:8px 0;border:1px solid var(--bd);border-radius:10px;padding:4px"></div>
+    <div id="stActionCard"></div>
+    <div class="btns" style="margin-top:12px;margin-bottom:6px"><button class="btn ghost sm" onclick="dlPdf()">Print sheet (PDF)</button><button class="btn ghost sm" onclick="dlZip()">All QR codes (ZIP)</button></div><p class="hint" style="margin:0 0 10px">The PDF is 8.5 × 13 in with 12 cards per page.</p>
+    <div id="stList" style="display:none"></div>
    </div>
   </div>
  </section>
@@ -380,11 +364,11 @@ summary{font-weight:700;margin:6px 0 12px;cursor:pointer;color:var(--red)}
 
  <!-- WARNINGS -->
  <section class="screen" id="warn">
-  <div class="wtabs" id="wTabs"><button type="button" data-k="log" onclick="warnTabClick('log')">Misconduct log</button><button type="button" data-k="new" onclick="warnTabClick('new')">New letter</button><button type="button" data-k="list" onclick="warnTabClick('list')">Letters <i id="wtL">0</i></button></div>
-  <div class="card" id="wLogCard"><h2>Misconduct log</h2><div id="wList"></div></div>
-  <div class="card" id="letCard" style="display:none"><h2 id="letH">New letter</h2>
-   <p class="hint" id="letHint" style="margin:0 0 4px">Make a warning notice, a notice of disciplinary action, or a sanction notice (for the SAO). Fill in the details, preview, then save or download the PDF.</p>
-   <div id="letForm" style="display:none;margin-top:10px">
+  <div class="card"><h2>Misconduct log</h2><div id="wList"></div></div>
+  <div class="card" id="letCard" style="margin-top:12px"><h2>Letters</h2>
+   <p class="hint" style="margin:0 0 10px">Make a warning notice, a notice of disciplinary action, or a sanction notice (for the SAO). Fill in the details, save, then download the PDF.</p>
+   <button class="btn" onclick="newLetter()">New letter</button>
+   <div id="letForm" style="display:none;margin-top:14px">
     <label>Letter type</label><select id="lfTy" onchange="letTyChanged()"><option value="1">Warning Notice (1st offense)</option><option value="2">Notice of Disciplinary Action (2nd offense)</option><option value="3">Sanction Notice (3rd / last offense, for the SAO)</option><option value="5">Notice of Endorsement to the SAO (after no appeal, or appeal not granted)</option><option value="4">Notice of Failure to Clean - Sanction Notice (sent first so they can appeal; no offense count)</option></select>
     <label>Student</label><select id="lfSt" onchange="letPickStudent()"></select>
     <label>Date of letter</label><input id="lfDate" type="date">
@@ -409,7 +393,7 @@ summary{font-weight:700;margin:6px 0 12px;cursor:pointer;color:var(--red)}
      <label>SAO signature image (optional, shown above the SAO name)</label>
      <div class="sgrow"><div class="sgpv" id="sgPvs">No signature</div><div class="sgbtns"><label class="btn ghost sm">Upload image<input type="file" accept="image/*" hidden onchange="sigUpload('s',this)"></label><button type="button" class="btn ghost sm" onclick="sigDraw('s')">Draw</button><button type="button" class="btn ghost sm" onclick="sigClear('s')">Remove</button></div></div></div>
     <label>Anything else to add (optional)</label><textarea id="lfNote" rows="2"></textarea>
-    <details><summary>Who signs the letter</summary>
+    <details open><summary>Who signs the letter</summary>
      <label>From (name)</label><input id="lfFrom"><label>From (position and section)</label><div class="two" style="gap:0 12px"><input id="lfPos" placeholder="Sergeant at Arms 1"><input id="lfSec" placeholder="BSIT 1-A"></div>
      <label>Signature title (under the name)</label><input id="lfSig" placeholder="Class Monitor">
      <label>Your signature image (shown above the From name)</label>
@@ -422,10 +406,10 @@ summary{font-weight:700;margin:6px 0 12px;cursor:pointer;color:var(--red)}
      <label>Paper size</label><select id="lfPaper"><option value="short">Short bond (8.5 x 11 in)</option><option value="a4">A4</option><option value="long">Long bond (8.5 x 13 in)</option></select></details>
     <div id="lfEdited" class="hint" style="display:none;margin:4px 0 10px">The wording of this letter was edited by hand, so changes to the fields above will not change the text. <a href="#" onclick="resetEdited();return false" style="color:var(--red);font-weight:700">Use the automatic text again</a></div>
     <p class="hint" style="margin:12px 0 0">Tap Preview to see the letter. You can edit the wording, save and download from the preview.</p>
-    <div class="btns lsticky" style="margin-top:10px"><button class="btn" onclick="previewForm()">Preview letter</button><button class="btn ghost" onclick="closeLetter()">Cancel</button></div>
+    <div class="btns" style="margin-top:10px"><button class="btn" onclick="previewForm()">Preview letter</button><button class="btn ghost" onclick="closeLetter()">Cancel</button></div>
     <p class="hint" id="lfMsg"></p></div>
-   <div id="letListPane" style="display:none"><input id="letQ" placeholder="Search student name" oninput="drawLetters()"><div id="letFilt" class="lfilt"></div>
-   <div id="letList" style="margin-top:8px"></div></div></div>
+   <div id="letFilt" class="lfilt"></div>
+   <div id="letList" style="margin-top:8px"></div></div>
  </section>
 </main>
 </div>
@@ -434,35 +418,137 @@ summary{font-weight:700;margin:6px 0 12px;cursor:pointer;color:var(--red)}
  <div id="lpPages"></div>
  <div id="lpEdit"><p class="hint" style="margin:0 0 12px">Change the wording below. Leave a blank line between paragraphs. Put **two stars** around words to make them bold. The date, names and signatures come from the letter form.</p>
   <label>Subject</label><input id="lpSubj"><label>Letter text</label><textarea id="lpBody" rows="16"></textarea></div>
- <div class="lpfoot" id="lpFootView"><button class="btn ghost" onclick="pvEditOpen()">Edit text</button><button class="btn ghost" onclick="downloadPreview()">Download PDF</button><button class="btn ghost" onclick="emOpenPv()">Email</button><button class="btn" id="lpSave" onclick="pvSave()">Save letter</button></div>
+ <div class="lpfoot" id="lpFootView"><button class="btn ghost" onclick="pvEditOpen()">Edit text</button><button class="btn ghost" onclick="downloadPreview()">Download PDF</button><button class="btn" id="lpSave" onclick="pvSave()">Save letter</button></div>
  <div class="lpfoot" id="lpFootEdit"><button class="btn ghost" onclick="pvEditCancel()">Cancel</button><button class="btn ghost" onclick="pvEditReset()">Reset text</button><button class="btn" onclick="pvEditApply()">Apply changes</button></div></div>
 <div id="stModal"><div class="sgcard"><h2 id="stTitle" style="margin:0 0 2px">Record</h2><p class="hint" id="stSub" style="margin:0 0 12px"></p>
  <div id="stOpts"></div><label>Date</label><input id="stDate" type="date"><label>Note (optional)</label><textarea id="stNote" rows="2" placeholder="e.g. Appeal reviewed by the Class Mayor"></textarea>
  <div class="btns"><button class="btn" onclick="stSave(false)">Save record</button><button class="btn ghost" onclick="stClose()">Cancel</button></div>
  <button class="btn" id="stMake" style="display:none;margin-top:10px" onclick="stSave(true)">Save and make SAO letter</button></div></div>
-<div id="emModal"><div class="sgcard"><h2 style="margin:0 0 2px">Email this letter</h2><p class="hint" id="emSub" style="margin:0 0 12px"></p>
- <label for="emFrom">Letter from</label><input id="emFrom" placeholder="Your name" autocomplete="name">
- <label for="emTo">Send to (email address)</label><input id="emTo" type="email" inputmode="email" autocapitalize="off" autocomplete="off" placeholder="student@example.com">
- <label for="emNote">Additional message (optional)</label><textarea id="emNote" rows="3" placeholder="e.g. Please read the letter and reply to us before Friday."></textarea>
- <p class="hint" id="emMsg" style="margin:-4px 0 12px"></p>
- <details id="emSetup"><summary>Direct sending setup (free)</summary>
-  <b style="font-size:13px">Google (sends the signed PDF)</b>
-  <ol style="margin-top:6px"><li>Tap <b>Copy the script</b> below.</li>
-  <li>Go to <b>script.google.com</b> and sign in with the Gmail that should send the letters. Tap <b>New project</b>, delete the code there, paste the script, and save.</li>
-  <li>Tap <b>Deploy</b>, then <b>New deployment</b>, then the gear and <b>Web app</b>. Set <b>Execute as: Me</b> and <b>Who has access: Anyone</b>. Deploy it and allow the permissions. If Google says the app is not verified, tap <b>Advanced</b> and continue. It is your own script.</li>
-  <li>Copy the <b>Web app URL</b> and paste it below.</li></ol>
-  <button type="button" class="btn ghost sm" style="margin-bottom:12px" onclick="emCopyScript()">Copy the script</button>
-  <label for="emGas">Web app URL</label><input id="emGas" autocomplete="off" placeholder="https://script.google.com/macros/s/.../exec" oninput="emCfgIn()">
-  <label for="emGsec">Password (made for you when you copy the script)</label><input id="emGsec" autocomplete="off" oninput="emCfgIn()">
-  </details>
- <div class="btns"><button class="btn" id="emSendBtn" onclick="emSend()">Send letter</button><button class="btn ghost" onclick="emClose()">Cancel</button></div>
- <button class="btn ghost" id="emShareBtn" style="display:none;margin-top:10px" onclick="emShare()">Share the PDF instead</button></div></div>
-
 <div id="sgModal"><div class="sgcard"><h2 style="margin:0 0 10px">Draw signature</h2><canvas id="sgCv"></canvas><div class="btns"><button class="btn ghost" onclick="sgClearPad()">Clear</button><button class="btn" onclick="sigUse()">Use signature</button></div><button class="btn ghost" style="margin-top:10px" onclick="sgClose()">Cancel</button></div></div>
 <div id="toasts" role="status" aria-live="polite"></div>
 <div id="printSheet"></div>
 <nav class="bnav" id="bnav"></nav>
 
+<script>
+/* Android native bridge: inside the Capacitor app, make the page's NDEFReader
+   work through the phonegap-nfc plugin, so MIFARE cards can be read by their ID. */
+(function(){
+ var C=window.Capacitor;
+ if(!C||!C.isNativePlatform||!C.isNativePlatform()||window.NDEFReader)return;
+ function err(n,m){var e=new Error(m||n);e.name=n;return e}
+ function fr(m){var e=err('NotSupportedError',m);e.friendly=m;return e}
+ function noNfc(m){
+  if(String(m).indexOf('DISABLED')>-1){try{if(window.nfc&&window.nfc.showSettings)window.nfc.showSettings()}catch(e){}return fr('NFC is switched off. Turn it on in the phone settings that just opened, then come back and try again.')}
+  if(String(m).indexOf('NO_NFC')>-1)return fr('This phone has no NFC.');
+  return fr('NFC is not available on this phone.')}
+ function hex(a){return (a||[]).map(function(b){return ('0'+((b+256)%256).toString(16)).slice(-2)}).join(':')}
+ function toRecords(msg){
+  return (msg||[]).map(function(r){
+   var p=r.payload||[],type=String.fromCharCode.apply(null,r.type||[]),rt='unknown',d=p;
+   if(r.tnf===1&&type==='T'){rt='text';d=p.slice(1+(p[0]&0x3F))}
+   else if(r.tnf===1&&type==='U'){rt='url';d=p.slice(1)}
+   else if(r.tnf===3){rt='absolute-url';d=p}
+   return {recordType:rt,encoding:'utf-8',data:new Uint8Array(d)}
+  })
+ }
+ function Reader(){this._l={}}
+ Reader.prototype.addEventListener=function(t,f){(this._l[t]=this._l[t]||[]).push(f)};
+ Reader.prototype._fire=function(t,ev){(this._l[t]||[]).forEach(function(f){try{f(ev)}catch(e){}})};
+ Reader.prototype.write=function(message,opt){
+  var sig=opt&&opt.signal;
+  return new Promise(function(resolve,reject){
+   var tries=0;
+   (function start(){
+    if(!window.nfc){if(++tries>50){reject(fr('NFC plugin not found in the app.'));return}setTimeout(start,100);return}
+    window.nfc.enabled(function(){
+     var recs=((message&&message.records)||[]).map(function(r){return r.recordType==='url'?window.nfc.uriRecord(r.data):window.nfc.textRecord(r.data)});
+     var done=false;
+     if(sig){
+      if(sig.aborted){reject(err('AbortError','aborted'));return}
+      sig.addEventListener('abort',function(){if(done)return;done=true;try{window.nfc.cancelWrite(function(){},function(){})}catch(e){}reject(err('AbortError','aborted'))})}
+     window.nfc.write(recs,function(){if(done)return;done=true;resolve()},function(m){if(done)return;done=true;reject(fr('The card could not be written ('+m+'). It may be locked, too small, or a type the phone cannot write (such as MIFARE Classic). Use NTAG213 or NTAG215, or use the link method below.'))})
+    },function(m){reject(noNfc(m))})
+   })()
+  })};
+ Reader.prototype.scan=function(opt){
+  var self=this,sig=opt&&opt.signal;
+  return new Promise(function(resolve,reject){
+   var tries=0;
+   (function start(){
+    if(!window.nfc){if(++tries>50){reject(err('NotSupportedError','NFC plugin not found'));return}setTimeout(start,100);return}
+    window.nfc.enabled(function(){
+     var pend={},last={};
+     function emit(id,msg){
+      var now=Date.now();if(last[id]&&now-last[id]<800)return;last[id]=now;
+      self._fire('reading',{serialNumber:id,message:{records:toRecords(msg)}})
+     }
+     var onTag=function(ev){
+      var id=hex(ev.tag&&ev.tag.id);if(!id)return;
+      clearTimeout(pend[id]);pend[id]=setTimeout(function(){emit(id,null)},300)
+     };
+     var onNdef=function(ev){
+      var t=ev.tag||{},id=hex(t.id);if(!id)return;
+      clearTimeout(pend[id]);emit(id,t.ndefMessage)
+     };
+     window.nfc.addTagDiscoveredListener(onTag,function(){},function(){});
+     window.nfc.addNdefListener(onNdef,function(){},function(){});
+     if(sig)sig.addEventListener('abort',function(){
+      try{window.nfc.removeTagDiscoveredListener(onTag)}catch(e){}
+      try{window.nfc.removeNdefListener(onNdef)}catch(e){}
+     });
+     resolve()
+    },function(m){reject(noNfc(m))})
+   })()
+  })
+ };
+ window.NDEFReader=Reader;
+})();
+</script>
+<script>
+/* Native Android shell (AndroidApp bridge): gives the page the same NDEFReader API
+   used elsewhere, backed by the phone's NFC reader mode. */
+(function(){
+ var A=window.AndroidApp;if(!A)return; /* always replace the browser's own NDEFReader: WebView has one, but it is blocked */
+ function mk(name,msg){var e=new Error(msg);e.name=name;e.friendly=msg;return e}
+ var readers=[],writeWait=null,enc=new TextEncoder();
+ function state(){try{return A.nfcState()}catch(e){return 0}}
+ function check(){var s=state();
+  if(s===0)throw mk('NotSupportedError','This phone has no NFC.');
+  if(s===1){try{A.openNfcSettings()}catch(e){}throw mk('NotSupportedError','NFC is switched off. Turn it on in the settings that just opened, then come back and try again.')}}
+ function toRecs(rs){return (rs||[]).map(function(r){var t=r.type==='url'?'url':(r.type==='text'?'text':'unknown');return {recordType:t,encoding:'utf-8',data:enc.encode(String(r.data||''))}})}
+ var WM={locked:'This card is locked (read-only), so it cannot be written.',keys:'This MIFARE card is protected with keys this app does not know (a school ID or bank card, for example). Use a blank card, or use Read card ID to link it without writing.',size:'This card is too small for the data. Use an NTAG213, NTAG215 or MIFARE Classic 1K card.',type:'This phone cannot write this card type. Many phones cannot write MIFARE Classic because of their NFC chip. Tap Read card ID instead: it links the card by its serial number and needs no writing.',io:'The card moved away or could not be written. Hold it flat and still on the back of the phone, then try again.'};
+ if(typeof A.print==='function'){window.print=function(){try{A.print()}catch(e){}}}
+ window.__nfcEvent=function(ev){
+  if(!ev)return;
+  if(ev.t==='tag'){readers.slice().forEach(function(r){r._fire('reading',{serialNumber:ev.id,message:{records:toRecs(ev.records)},tech:ev.tech||'',writable:ev.writable,size:ev.size})})}
+  else if(ev.t==='log'){try{window.nfcLogAdd&&window.nfcLogAdd(ev.msg)}catch(e){}}
+  else if(ev.t==='written'||ev.t==='writeerror'){var w=writeWait;writeWait=null;if(w){if(ev.t==='written')w.ok(ev.id,ev.short);else w.fail(ev.msg,(WM[ev.msg]||WM.io)+(ev.detail?'  Details: '+ev.detail:''))}}
+ };
+ function sync(){try{A.nfcWant(readers.length>0)}catch(e){}}
+ function Reader(){this._l={}}
+ Reader.prototype.addEventListener=function(t,f){(this._l[t]=this._l[t]||[]).push(f)};
+ Reader.prototype._fire=function(t,ev){(this._l[t]||[]).forEach(function(f){try{f(ev)}catch(e){}})};
+ Reader.prototype.scan=function(opt){
+  var self=this,sig=opt&&opt.signal;
+  return new Promise(function(res,rej){
+   try{check()}catch(e){rej(e);return}
+   if(readers.indexOf(self)<0)readers.push(self);sync();
+   if(sig)sig.addEventListener('abort',function(){var i=readers.indexOf(self);if(i>-1)readers.splice(i,1);sync()});
+   res()})};
+ Reader.prototype.write=function(message,opt){
+  var sig=opt&&opt.signal;
+  return new Promise(function(res,rej){
+   try{check()}catch(e){rej(e);return}
+   var recs=((message&&message.records)||[]).map(function(r){return {type:r.recordType==='url'?'url':'text',data:String(r.data)}});
+   window.__lastWrittenId='';window.__lastWrittenShort=false;writeWait={ok:function(id,sh){window.__lastWrittenId=id||'';window.__lastWrittenShort=!!sh;res()},fail:function(code,m){rej(mk(code==='size'?'NotSupportedError':'NotReadableError',m))}};
+   if(sig){
+    if(sig.aborted){writeWait=null;rej(mk('AbortError','aborted'));return}
+    sig.addEventListener('abort',function(){if(writeWait){writeWait=null;try{A.nfcCancelWrite()}catch(e){}rej(mk('AbortError','aborted'))}})}
+   try{A.nfcWrite(JSON.stringify(recs))}catch(e){writeWait=null;rej(mk('NotReadableError',WM.io))}
+  })};
+ try{Object.defineProperty(window,'NDEFReader',{value:Reader,writable:true,configurable:true})}catch(e){window.NDEFReader=Reader}
+})();
+</script>
 <script>(function(){var D={},C={};function R(n){n=n.replace('./','');if(!C[n]){var m={exports:{}};C[n]=m;D[n](m,m.exports,R)}return C[n].exports}
 D['QRMode']=function(module,exports,require){
 module.exports = {
@@ -1924,8 +2010,10 @@ Object.keys(L).forEach(function(k){
  side+='<button class="nav-btn" data-k="'+k+'" onclick="go(\''+k+'\')">'+ic(k)+L[k]+'</button>';
  bn+='<button class="nav-btn'+(k==='scan'?' scanfab':'')+'" data-k="'+k+'" onclick="go(\''+k+'\')">'+ic(k)+L[k]+'</button>';
 });
+side+='<button class="nav-btn" style="color:var(--red,#800000);font-weight:700" onclick="toggleAiDrawer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.5 6.5L21 11l-6.5 2.5L12 20l-2.5-6.5L3 11l6.5-2.5z"/></svg>AI Assistant</button>';
+bn+='<button class="nav-btn" style="color:var(--red,#800000);font-weight:700" onclick="toggleAiDrawer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.5 6.5L21 11l-6.5 2.5L12 20l-2.5-6.5L3 11l6.5-2.5z"/></svg>AI</button>';
 document.getElementById('side').innerHTML=side;document.getElementById('bnav').innerHTML=bn;
-function go(k){if(k!=='scan'&&nfcOn)nfcScanOff();if(k!=='students'&&nfcAbort&&!nfcOn){nfcStop();nfcIdle()}if(k!=='scan'&&stream)stopCam();if(k!=='scan'&&(warnOn||lateOn)){warnOn=false;lateOn=false;updMode();toast('Scan mode off','info')}document.getElementById('subbar').style.display=(k==='home'||k==='scan')?'flex':'none';document.getElementById('classNote').style.display=(k==='home'||k==='scan')?'block':'none';
+function go(k){if(window.AndroidApp){if(k!=='home'&&k!=='scan'){if(nfcOn)nfcScanOff();else if(nfcStarting)nfcStop()}setTimeout(nfcAuto,80)}else if(k!=='scan'&&nfcOn)nfcScanOff();if(k!=='students'&&nfcAbort&&(window.AndroidApp?nfcBusy:!nfcOn)){nfcStop();nfcIdle()}if(k!=='scan'&&stream)stopCam();if(k!=='scan'&&(warnOn||lateOn)){warnOn=false;lateOn=false;updMode();toast('Scan mode off','info')}document.getElementById('subbar').style.display=(k==='home'||k==='scan')?'flex':'none';document.getElementById('classNote').style.display=(k==='home'||k==='scan')?'block':'none';
  document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',s.id===k)});
  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.toggle('on',b.dataset.k===k)});
  document.getElementById('ttl').textContent=T[k];window.scrollTo(0,0);
@@ -2031,8 +2119,7 @@ function drawHome(){
 var armRec=-1,armTimer=0,secOpen={},dayOpen={},dayFirst={};
 function cnt(it){var p=0,l=0,a=0;it.forEach(function(x){if(x.s==='Present')p++;else if(x.s==='Late')l++;else a++});return [p,l,a]}
 function togSec(i){var k=subs[i].c+'|'+subs[i].n,was=secOpen[k]===true;secOpen={};if(!was)secOpen[k]=true;drawRecs();var e=document.getElementById('sec'+i);if(e&&!was)e.scrollIntoView({behavior:'smooth',block:'start'})}
-function closeOtherDays(key){var pre=key.split('|')[0]+'|';[dayFirst,dayOpen].forEach(function(m){Object.keys(m).forEach(function(k){if(k!==key&&k.indexOf(pre)===0)dayOpen[k]=false})})}
-function togDay(key){var o=dayOpen[key];if(o===undefined)o=dayFirst[key]===true;if(!o)closeOtherDays(key);dayOpen[key]=!o;drawRecs()}
+function togDay(key){var o=dayOpen[key];if(o===undefined)o=dayFirst[key]===true;dayOpen[key]=!o;drawRecs()}
 function exportDay(i,dk){var s=subs[i];if(!s)return;
  var rows=(s.r||[]).filter(function(x){return x.d===dk}).map(function(x){return [f(new Date(dk+'T00:00'),{year:'numeric',month:'short',day:'numeric'}),s.n,s.c,x.n,x.i,x.t,x.s,x.w||0]});
  if(!rows.length){msg('No records on that day.',1);return}
@@ -2040,7 +2127,7 @@ function exportDay(i,dk){var s=subs[i];if(!s)return;
 var pinned={};
 function nowT(){var n=new Date();return hm(n.getHours()*60+n.getMinutes())}
 function unrec(s,dk){return students.filter(function(st){return !s.r.some(function(r){return r.d===dk&&r.i===st.i})})}
-function pinDay(i){var s=subs[i],v=document.getElementById('pd'+i).value;if(!s)return;if(!v){toast('Pick a date first.','bad');return}pinned[s.c+'|'+s.n+'|'+v]=true;closeOtherDays(i+'|'+v);dayOpen[i+'|'+v]=true;drawRecs()}
+function pinDay(i){var s=subs[i],v=document.getElementById('pd'+i).value;if(!s)return;if(!v){toast('Pick a date first.','bad');return}pinned[s.c+'|'+s.n+'|'+v]=true;dayOpen[i+'|'+v]=true;drawRecs()}
 function setStatus(si2,ix,v){var s=subs[si2],x=s&&s.r[ix];if(!x||x.s===v)return;var old=x.s;x.s=v;x.mt=Date.now();
  if(v==='Absent')x.t='\u2014';else if(old==='Absent'||x.t==='\u2014')x.t=x.d===ymd(today)?nowT():'\u2014';
  toast(x.n+' changed from '+old+' to '+v+' ('+s.c+')',v==='Present'?'ok':'warn');drawRecs();drawHome();save()}
@@ -2119,7 +2206,7 @@ function rtag(){var v=document.getElementById('rview').value;return ymd(cur)+(v=
 function toCsv(rows){return '\uFEFF'+[HEAD].concat(rows).map(function(r){return r.map(function(c){c=String(c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(',')}).join('\r\n')}
 function msg(t,bad){var e=document.getElementById('exMsg');e.textContent=t;e.style.color=bad?'var(--red)':'var(--mu)';if(t)toast(t.split('. ')[0],bad?'bad':'ok')}
 function sheetName(s,used){var n=(s.c+' '+s.n).replace(/[\[\]:*?\/\\]/g,'').slice(0,28),b=n,i=2;while(used.indexOf(n)>-1){n=b+' '+i++}used.push(n);return n}
-async function saveFile(name,data){try{dlBlob(name,data);msg('Saved '+name+'. For Google Sheets, open it there with File → Import → Upload.')}catch(e){msg('Could not save the file.',1)}}
+async function saveFile(name,data){try{await dlBlob(name,data);msg('Saved '+name+'. For Google Sheets, open it there with File → Import → Upload.')}catch(e){msg(e&&e.message&&isNative()?e.message:'Could not save the file.',1)}}
 function crc32(u){var t=crc32.t;if(!t){t=crc32.t=[];for(var n=0,c,k;n<256;n++){c=n;for(k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}}var c2=-1;for(var i=0;i<u.length;i++)c2=t[(c2^u[i])&255]^(c2>>>8);return (c2^-1)>>>0}
 function zipStore(files){var en=new TextEncoder(),parts=[],cd=[],off=0;
  files.forEach(function(f){var nb=en.encode(f.n),crc=crc32(f.d),h=new DataView(new ArrayBuffer(30));
@@ -2152,14 +2239,140 @@ var editId=null,delId=null,uid=100;
 function val(id){return document.getElementById(id).value.trim()}
 function stMsg(t,bad){var e=document.getElementById('stMsg');e.textContent=t;e.style.color=bad?'var(--red)':'var(--mu)';if(t)toast(t,bad?'bad':'ok')}
 function byU(u){return students.filter(function(x){return x.u===u})[0]}
+function isIOS(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)}
+function openShortcutsApp(){location.href='shortcuts://'}
+async function copyShortcut(u){
+ var x=byU(u);if(!x)return;
+ var fresh=false;
+ if(!x.k){x.k=newTok();x.mt=Date.now();fresh=true;save()}
+ var link=cardUrl(x.k);
+ try{await navigator.clipboard.writeText(link);toast('Link for '+x.n+' copied. Paste it in the Open URLs action.','ok')}
+ catch(e){window.prompt('Copy this link for '+x.n,link)}
+ if(fresh)toast('This student had no card link yet, so a new one was made. Write it onto their card too.','info');
+ drawStudents()
+}
+var selectedStudentId = null;
+function selectStudent(u){
+ if(!u){selectedStudentId=null;drawStudents();return}
+ selectedStudentId = Number(u);
+ drawStudents();
+}
+function recordStudentAttendance(u){
+ var x = byU(u);
+ if(!x){ toast('Student not found','bad'); return; }
+ act(x);
+}
+function writeNfcForStudent(u){
+ var x = byU(u);
+ if(!x) return;
+ editStudent(u);
+ linkCard();
+}
+function unlinkNfcForSelected(u){
+ var x = byU(u);
+ if(!x) return;
+ x.nfc = '';
+ x.nw = false;
+ x.mt = Date.now();
+ save();
+ if(editId === u){
+  formNfc = '';
+  formWritten = false;
+  showNfcForm();
+ }
+ drawStudents();
+ drawHome();
+ drawRecs();
+ toast('Unlinked NFC card for ' + x.n, 'info');
+}
 function drawStudents(){
- var q=document.getElementById('stSearch').value.trim().toLowerCase();
- var list=students.filter(function(x){return !q||(x.n+' '+x.i).toLowerCase().indexOf(q)>-1}).sort(byLast);
- document.getElementById('stCount').textContent=students.length;
- document.getElementById('stList').innerHTML=list.length?list.map(function(x){
-  if(delId===x.u)return '<div class="row" style="flex-wrap:wrap;background:var(--red-l);border-radius:12px;padding:12px;margin:6px 0"><div class="grow" style="flex-basis:100%"><b style="white-space:normal">Delete '+esc(x.n)+'?</b><span style="white-space:normal">Their attendance records in every subject will be removed too.</span></div><button class="btn sm" onclick="confirmDel('+x.u+')">Yes, delete</button><button class="btn ghost sm" onclick="cancelDel()">Cancel</button></div>';
-  return '<div class="row rw"><div class="av">'+esc(ini(x.n))+'</div><div class="grow"><b>'+esc(x.n)+'</b><span>'+esc([x.i,x.sec,x.ph,x.nfc?(x.nw?'NFC card (written)':'NFC card linked'):(x.k?'Card link':'')].filter(Boolean).join(' · '))+'</span></div><div class="acts"><button class="btn ghost sm" onclick="showQR('+x.u+')">QR</button><button class="btn ghost sm" onclick="editStudent('+x.u+')">Edit</button><button class="btn ghost sm" onclick="askDel('+x.u+')" aria-label="Delete student">✕</button></div></div>'
- }).join(''):'<p style="color:var(--mu);margin:0">'+(students.length?'No students match your search.':'No students yet. Add your first one.')+'</p>';
+ var sInput = document.getElementById('stSearch');
+ var q = sInput ? sInput.value.trim().toLowerCase() : '';
+ var list = students.filter(function(x){ return !q || (x.n + ' ' + x.i).toLowerCase().indexOf(q) > -1; });
+ var countEl = document.getElementById('stCount');
+ if(countEl) countEl.textContent = students.length;
+ var ib = document.getElementById('iosBox');
+ if(ib) ib.style.display = isIOS() ? 'block' : 'none';
+
+ if(selectedStudentId === null || !students.some(function(x){ return x.u === selectedStudentId; })){
+  selectedStudentId = list.length ? list[0].u : (students.length ? students[0].u : null);
+ } else if(q && list.length && !list.some(function(x){ return x.u === selectedStudentId; })){
+  selectedStudentId = list[0].u;
+ }
+
+ var selEl = document.getElementById('stSelect');
+ if(selEl){
+  if(!list.length){
+   selEl.innerHTML = '<option value="">No matching students</option>';
+   selEl.disabled = true;
+  } else {
+   selEl.disabled = false;
+   selEl.innerHTML = list.map(function(x){
+    var badge = x.nfc ? '[Linked]' : '[Unlinked]';
+    var sel = x.u === selectedStudentId ? ' selected' : '';
+    return '<option value="' + x.u + '"' + sel + '>' + esc(x.n) + ' (ID: ' + esc(x.i) + ') ' + badge + '</option>';
+   }).join('');
+  }
+ }
+
+ var qpEl = document.getElementById('stQuickPick');
+ if(qpEl){
+  if(!list.length){
+   qpEl.innerHTML = '<p style="color:var(--mu);margin:8px;font-size:13px">' + (students.length ? 'No students match your search.' : 'No students yet. Add your first one.') + '</p>';
+  } else {
+   qpEl.innerHTML = list.map(function(x){
+    var isSel = x.u === selectedStudentId;
+    var badgeHtml = x.nfc ? '<span class="chip ok" style="font-size:11px">Linked</span>' : '<span class="chip warn" style="font-size:11px">Unlinked</span>';
+    var style = isSel ? 'background:var(--red-l);border:1px solid var(--red);border-radius:8px;padding:6px 8px;margin:2px 0;cursor:pointer;display:flex;align-items:center;gap:8px' : 'border-radius:8px;padding:6px 8px;margin:2px 0;cursor:pointer;display:flex;align-items:center;gap:8px';
+    return '<div class="st-qp-item" style="' + style + '" onclick="selectStudent(' + x.u + ')">' +
+      '<div class="av" style="width:28px;height:28px;font-size:12px;flex-shrink:0">' + esc(ini(x.n)) + '</div>' +
+      '<div class="grow" style="min-width:0;line-height:1.2"><b style="font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(x.n) + '</b><span style="font-size:11px;color:var(--mu)">ID: ' + esc(x.i) + '</span></div>' +
+      '<div>' + badgeHtml + '</div>' +
+    '</div>';
+   }).join('');
+  }
+ }
+
+ var acEl = document.getElementById('stActionCard');
+ if(acEl){
+  var st = selectedStudentId !== null ? byU(selectedStudentId) : null;
+  if(!st){
+   acEl.innerHTML = '<div class="card" style="margin-top:10px;text-align:center;padding:16px"><p style="color:var(--mu);margin:0">' + (students.length ? 'Select a student above to perform actions.' : 'No students added yet.') + '</p></div>';
+  } else {
+   var nfcAvail = (window.AndroidApp || (typeof nfcOk === 'function' && nfcOk()));
+   var nfcBadge = st.nfc ? '<span class="chip ok" style="font-size:12px">Linked (' + esc(fmtUid(st.nfc)) + ')</span>' : '<span class="chip warn" style="font-size:12px">Unlinked</span>';
+   var delBox = '';
+   if(delId === st.u){
+    delBox = '<div style="background:var(--red-l);border-radius:10px;padding:10px;margin-top:10px">' +
+      '<b style="display:block;margin-bottom:4px">Delete ' + esc(st.n) + '?</b>' +
+      '<span style="font-size:12px;display:block;margin-bottom:8px">Their attendance records in every subject will be removed too.</span>' +
+      '<div style="display:flex;gap:8px"><button class="btn sm" onclick="confirmDel(' + st.u + ')">Yes, delete</button><button class="btn ghost sm" onclick="cancelDel()">Cancel</button></div>' +
+    '</div>';
+   }
+   acEl.innerHTML = '<div class="card" style="margin-top:10px;padding:14px;border:1px solid var(--bd);border-radius:12px;background:var(--bg)">' +
+     '<div class="row" style="border:0;padding:0 0 10px;align-items:center;gap:12px">' +
+       '<div class="av" style="width:44px;height:44px;font-size:18px;flex-shrink:0">' + esc(ini(st.n)) + '</div>' +
+       '<div class="grow" style="min-width:0">' +
+         '<h3 style="margin:0;font-size:16px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(st.n) + '</h3>' +
+         '<div style="font-size:12px;color:var(--mu);margin-top:2px">ID: <b>' + esc(st.i) + '</b> · ' + esc(st.sec || 'BSIT I-A') + '</div>' +
+       '</div>' +
+       '<div>' + nfcBadge + '</div>' +
+     '</div>' +
+     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">' +
+       '<button class="btn sm" onclick="showQR(' + st.u + ')">Generate QR</button>' +
+       '<button class="btn ghost sm" onclick="recordStudentAttendance(' + st.u + ')">Record Attendance</button>' +
+       (nfcAvail ? ('<button class="btn ghost sm" onclick="writeNfcForStudent(' + st.u + ')">' + (st.nfc ? 'Rewrite NFC Card' : 'Write NFC Card') + '</button>' +
+                   (st.nfc ? '<button class="btn ghost sm bad" onclick="unlinkNfcForSelected(' + st.u + ')">Unlink Card</button>' : '')) : '') +
+       '<button class="btn ghost sm" onclick="editStudent(' + st.u + ')">Edit Info</button>' +
+       (isIOS() ? '<button class="btn ghost sm" onclick="copyShortcut(' + st.u + ')">Shortcut</button>' : '') +
+       '<button class="btn ghost sm bad" onclick="askDel(' + st.u + ')" aria-label="Delete student">Delete</button>' +
+     '</div>' +
+     delBox +
+   '</div>';
+  }
+ }
+ var stListEl = document.getElementById('stList');
+ if(stListEl) stListEl.style.display = 'none';
 }
 function clearForm(){
  editId=null;document.getElementById('nm').value='';document.getElementById('idn').value='';document.getElementById('stSec').value='BSIT I-A';document.getElementById('stPh').value='';document.getElementById('stEm').value='';
@@ -2191,7 +2404,7 @@ function saveStudent(){
  var T=editId!==null?byU(editId):d,ts=Date.now();
   if(formNfc!==null||formWritten){if(formNfc!==null){T.nfc=formNfc;T.nw=!!formNfc&&formWritten}else T.nw=true;T.mt=ts}
  if(formTok){T.k=formTok;T.mt=ts}
- sortStu();clearForm();stMsg(msg);drawStudents();drawHome();drawRecs();
+ clearForm();stMsg(msg);drawStudents();drawHome();drawRecs();
 }
 function askDel(u){delId=u;drawStudents()}
 function cancelDel(){delId=null;drawStudents()}
@@ -2212,15 +2425,28 @@ function toast(t,kind){
  setTimeout(function(){killToast(e)},kind==='bad'?5000:3200)}
 function killToast(e){if(!e.parentNode)return;e.classList.add('out');setTimeout(function(){if(e.parentNode)e.parentNode.removeChild(e)},260)}
 var syFail=0;
-var dead={},ren={},letters=[],lset={},emc={svc:'',tpl:'',key:'',from:'',map:{},att:false,gas:'',gsec:'',mt:0},lastSy='',warns=[],KEY='qrAttendanceV1',lastJ='',qrOv=null,lastSt=null,lastCode='',lastAt=0,stream=null,face='environment',busy=false,bd=null;
-function snap(f){var o={students:students,subs:subs,warns:warns,letters:letters,lset:lset,dead:dead,ren:ren,uid:uid,em:emc};if(!f)o.si=si;return o}
+var dead={},ren={},letters=[],lset={},lastSy='',warns=[],KEY='qrAttendanceV1',lastJ='',qrOv=null,lastSt=null,lastCode='',lastAt=0,stream=null,face='environment',busy=false,bd=null;
+function snap(f){var o={students:students,subs:subs,warns:warns,letters:letters,lset:lset,dead:dead,ren:ren,uid:uid};if(!f)o.si=si;return o}
 function save(){try{var j=JSON.stringify(snap());if(j!==lastJ){localStorage.setItem(KEY,j);lastJ=j}var s2=JSON.stringify(snap(true));if(s2!==lastSy){lastSy=s2;if(sy.on)schedSync()}}catch(e){}}
-function emFix(e){e=e||{};return {svc:e.svc||'',tpl:e.tpl||'',key:e.key||'',from:e.from||'',map:e.map||{},att:!!e.att,gas:e.gas||'',gsec:e.gsec||'',mt:e.mt||0}}
-function applyState(o){if(o.em)emc=emFix(o.em);students=o.students||[];sortStu();subs=o.subs||[];warns=o.warns||[];letters=o.letters||[];lset=o.lset||{};dead=o.dead||{};ren=o.ren||{};si=Math.min(o.si||0,Math.max(0,subs.length-1));uid=o.uid||100}
+function applyState(o){students=o.students||[];subs=o.subs||[];warns=o.warns||[];letters=o.letters||[];lset=o.lset||{};dead=o.dead||{};ren=o.ren||{};si=Math.min(o.si||0,Math.max(0,subs.length-1));uid=o.uid||100}
 function load(){try{var j=localStorage.getItem(KEY);if(j){applyState(JSON.parse(j));lastJ=j}}catch(e){}}
 setInterval(save,1500);addEventListener('pagehide',save);document.addEventListener('visibilitychange',save);
-function dlBlob(name,data){var e=name.split('.').pop(),t={csv:'text/csv;charset=utf-8',svg:'image/svg+xml',json:'application/json',png:'image/png',zip:'application/zip',pdf:'application/pdf'}[e]||'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',u=URL.createObjectURL(new Blob([data],{type:t})),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000)}
-async function saveVia(name,data,say){try{dlBlob(name,data);say('Saved '+name+'.')}catch(e){say('Could not save the file.',1)}}
+function isNative(){try{return !!window.AndroidApp||!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform())}catch(e){return false}}
+function blobB64(b){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(String(r.result).split(',')[1]||'')};r.onerror=function(){rej(r.error)};r.readAsDataURL(b)})}
+async function dlBlob(name,data){
+ var e=name.split('.').pop(),t={csv:'text/csv;charset=utf-8',svg:'image/svg+xml',json:'application/json',png:'image/png',zip:'application/zip',pdf:'application/pdf'}[e]||'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',b=data instanceof Blob?data:new Blob([data],{type:t});
+ if(window.AndroidApp){
+  var res=window.AndroidApp.saveFile(name,t.split(';')[0],await blobB64(b));
+  if(String(res).indexOf('ERR:')===0)throw new Error(String(res).slice(4)||'Could not save the file.');
+  return}
+ if(isNative()){
+  var PL=window.Capacitor.Plugins||{},FS=PL.Filesystem,SH=PL.Share;
+  if(!FS||!SH)throw new Error('Saving files needs the Filesystem and Share plugins in the app. Add @capacitor/filesystem and @capacitor/share, then rebuild.');
+  var w=await FS.writeFile({path:name,data:await blobB64(b),directory:'CACHE'});
+  try{await SH.share({title:name,url:w.uri,dialogTitle:'Save or share '+name})}catch(x){if(!/cancel/i.test(String(x&&x.message||x)))throw x}
+  return}
+ var u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000)}
+async function saveVia(name,data,say){try{await dlBlob(name,data);say('Saved '+name+'.')}catch(e){say(e&&e.message&&isNative()?e.message:'Could not save the file.',1)}}
 function dataMsg(t,bad){var e=document.getElementById('dataMsg');e.textContent=t;e.style.color=bad?'var(--red)':'var(--mu)';if(t)toast(t.split('. ')[0],bad?'bad':'ok')}
 function backup(){saveVia('attendance-backup-'+ymd(new Date())+'.json',JSON.stringify(snap()),dataMsg)}
 function restore(inp){var f=inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var o=JSON.parse(r.result);if(!o||!Array.isArray(o.students)||!Array.isArray(o.subs))throw 0;applyState(o);save();drawStudents();drawSubs();render();drawWarns();drawLetters();dataMsg('Backup restored.')}catch(e){dataMsg('That file is not a valid backup.',1)}inp.value=''};r.readAsText(f)}
@@ -2248,9 +2474,7 @@ function dlQR(){var c=qrCur();if(!c){stMsg('Type an ID number first.',1);return}
  var cv=document.createElement('canvas');cv.width=640;cv.height=820;drawCard(cv.getContext('2d'),0,0,640,c.ln,c.i);
  cv.toBlob(function(b){saveVia(cardName(c.n,c.i),b,stMsg)},'image/png')}
 function bytesOf(cv,type,q){return new Promise(function(res){cv.toBlob(function(b){b.arrayBuffer().then(function(a){res(new Uint8Array(a))})},type,q)})}
-function stuCmp(a,b){return byLast(a,b)||(String(a.i)<String(b.i)?-1:String(a.i)>String(b.i)?1:0)}
-function sortStu(){students.sort(stuCmp)}
-function byLast(a,b){var x=lastName(a.n).toLowerCase(),y=lastName(b.n).toLowerCase();return x<y?-1:x>y?1:String(a.n).localeCompare(String(b.n),undefined,{sensitivity:'base'})}
+function byLast(a,b){var x=lastName(a.n).toLowerCase(),y=lastName(b.n).toLowerCase();return x<y?-1:x>y?1:0}
 async function dlZip(){
  if(!students.length){stMsg('Add students first.',1);return}
  toast('Preparing '+students.length+' QR cards\u2026','info');
@@ -2296,11 +2520,12 @@ function nfcOk(){return 'NDEFReader' in window}
 var NFC_DENIED='NFC is blocked for this site. In Chrome, tap the lock icon next to the address, choose Permissions, set NFC to Allow, then reload this page.';
 function nfcTop(){try{return window.top===window.self}catch(e){return false}}
 function nfcWhyNot(){
- if(!window.isSecureContext)return 'NFC only works on a secure page. Open the app from its https:// address (for example your GitHub Pages link), not from a downloaded file or an http:// address.';
+ if(window.AndroidApp){var ns=0;try{ns=window.AndroidApp.nfcState()}catch(e){}return ns===0?'This phone has no NFC.':''}
+ if(!window.isSecureContext&&!isNative())return 'NFC only works on a secure page. Open the app from its https:// address (for example your GitHub Pages link), not from a downloaded file or an http:// address.';
  if(!nfcTop())return 'NFC does not work when the app is shown inside another page or app. Open the app’s own https:// address directly in Chrome.';
  if(!nfcOk())return 'This browser cannot use NFC. On an Android phone with NFC, open the app in Chrome (not inside another app such as Facebook or Messenger, and not Firefox). NFC does not work on iPhone or on a computer.';
  return ''}
-function nfcErr(e){var n=e&&e.name;
+function nfcErr(e){if(e&&e.friendly)return e.friendly;var n=e&&e.name;
  if(n==='NotAllowedError')return NFC_DENIED;
  if(n==='NotSupportedError')return 'NFC is switched off, or this phone has no NFC. Turn NFC on in the phone settings (swipe down, tap NFC), then try again.';
  if(n==='NotReadableError')return 'The phone could not use NFC right now. Turn NFC off and on again in the phone settings, then try again.';
@@ -2308,9 +2533,10 @@ function nfcErr(e){var n=e&&e.name;
  if(n==='NetworkError')return 'The card moved away too soon. Hold it flat and still on the back of the phone.';
  if(n==='InvalidStateError')return 'NFC is busy. Wait a moment and try again.';
  return 'NFC problem ('+(n||'error')+(e&&e.message?': '+e.message:'')+'). Try again.'}
-async function nfcPermState(){try{if(navigator.permissions&&navigator.permissions.query){var p=await navigator.permissions.query({name:'nfc'});return p.state}}catch(e){}return 'unknown'}
+async function nfcPermState(){if(isNative())return 'granted';try{if(navigator.permissions&&navigator.permissions.query){var p=await navigator.permissions.query({name:'nfc'});return p.state}}catch(e){}return 'unknown'}
 async function nfcAllow(say){
  var why=nfcWhyNot();if(why){say(why,1);return false}
+ if(window.AndroidApp){var st=0;try{st=window.AndroidApp.nfcState()}catch(e){}if(st===1){try{window.AndroidApp.openNfcSettings()}catch(e){}say('NFC is switched off. Turn it on in the settings that just opened, then come back.',1);return false}say('NFC is on. The app does not need extra permission. You can scan and write cards.');toast('NFC is on','ok');return true}
  var p=await nfcPermState();
  if(p==='denied'){say(NFC_DENIED,1);return false}
  if(p==='granted'){say('NFC is allowed. You can scan and write cards.');toast('NFC is allowed','ok');return true}
@@ -2322,7 +2548,7 @@ function nfcStop(){if(nfcAbort){try{nfcAbort.abort()}catch(e){}nfcAbort=null}}
 var formTok=null,phChecked=false,phRepo=false,phHide=false;
 function newTok(){var a=new Uint8Array(10),o='';crypto.getRandomValues(a);for(var i=0;i<10;i++)o+=(a[i]%36).toString(36);return o}
 function curTok(){var x=editId!==null?byU(editId):null;return formTok||(x&&x.k)||''}
-function cardUrl(t){return location.origin+location.pathname.replace(/[^\/]*$/,'')+'?c='+t}
+function cardUrl(t){var native=isNative()||location.hostname==='localhost'||location.protocol==='file:'||location.protocol==='capacitor:';return (native?'https://callmejstn.github.io/attendance/':location.origin+location.pathname.replace(/[^\/]*$/,''))+'?c='+t}
 function showUrl(){var t=curTok();document.getElementById('nfcUrl').value=t?cardUrl(t):'';document.getElementById('urlBtn').textContent=t?'Copy link':'Create link'}
 async function linkBtn(){var t=curTok();
  if(!t){formTok=newTok();showUrl();nfcMsg('Link created. Press Save to keep it, then copy it onto the card.');return}
@@ -2331,13 +2557,43 @@ async function linkBtn(){var t=curTok();
  catch(e){var i=document.getElementById('nfcUrl');i.select();try{document.execCommand('copy');toast('Card link copied','ok')}catch(e2){nfcMsg('Select the link and copy it by hand.',1)}}}
 function saveModes(){try{if(lateOn||warnOn)localStorage.setItem('qrAttModes',JSON.stringify({l:lateOn,w:warnOn,r:document.getElementById('wReason').value,n:val('wNote'),t:Date.now()}));else localStorage.removeItem('qrAttModes')}catch(e){}}
 function restoreModes(){try{var m=JSON.parse(localStorage.getItem('qrAttModes')||'null');if(m&&Date.now()-m.t<3*3600*1000){lateOn=!!m.l;warnOn=!!m.w&&!m.l;if(m.r)document.getElementById('wReason').value=m.r;document.getElementById('wNote').value=m.n||'';updMode()}}catch(e){}}
-function handleCardUrl(){
- var tk=new URLSearchParams(location.search).get('c');if(!tk)return;
- try{history.replaceState(null,'',location.pathname)}catch(e){}
+function handleCardToken(tk){
+ if(!tk)return;
+ if(!nfcScreenOk()||nfcBusy||(window.AndroidApp&&!nfcPref)){nfcLogAdd('card link ignored: attendance only records on Home or Scan');return}
  var st=students.filter(function(z){return z.k===tk})[0];
- go('scan');restoreModes();
+ if(!window.AndroidApp)go('scan');restoreModes();
  if(!st){showRes(null,'Unknown card','t-abs','This card link is not recognized on this phone yet. Open the app so it can sync, then tap the card again.');return}
  act(st)}
+function handleCardUrl(){var tk=new URLSearchParams(location.search).get('c');if(!tk)return;try{history.replaceState(null,'',location.pathname)}catch(e){}handleCardToken(tk)}
+function backPressed(){
+ if(document.getElementById('sgModal').classList.contains('on')){sgClose();return true}
+ if(document.getElementById('stModal').classList.contains('on')){stClose();return true}
+ var lp=document.getElementById('lpModal');
+ if(lp.classList.contains('editing')){pvEditCancel();return true}
+ if(lp.classList.contains('on')){closePreview();return true}
+ var scr=document.querySelector('.screen.on');
+ if(scr&&scr.id!=='home'){go('home');return true}
+ return false}
+window.__back=backPressed;
+window.__cardUrl=function(u){var m=/[?&]c=([A-Za-z0-9]+)/.exec(u||'');if(m)handleCardToken(m[1])};
+function nativeInit(){
+ if(!(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App&&isNative()))return;
+ var A=(window.Capacitor.Plugins||{}).App;if(!A)return;
+ function fromUrl(u){var m=/[?&]c=([A-Za-z0-9]+)/.exec(u||'');if(m)handleCardToken(m[1])}
+ try{A.addListener('appUrlOpen',function(ev){fromUrl(ev&&ev.url)})}catch(e){}
+ try{if(A.getLaunchUrl)A.getLaunchUrl().then(function(r){if(r&&r.url)fromUrl(r.url)}).catch(function(){})}catch(e){}
+ try{A.addListener('backButton',function(){
+  if(document.getElementById('sgModal').classList.contains('on')){sgClose();return}
+  if(document.getElementById('stModal').classList.contains('on')){stClose();return}
+  var lp=document.getElementById('lpModal');
+  if(lp.classList.contains('editing')){pvEditCancel();return}
+  if(lp.classList.contains('on')){closePreview();return}
+  var scr=document.querySelector('.screen.on');
+  if(scr&&scr.id!=='home'){go('home');return}
+  if(A.minimizeApp)A.minimizeApp();else if(A.exitApp)A.exitApp()})}catch(e){}
+ try{A.addListener('appStateChange',function(st){
+  if(!st.isActive){if(stream){stopCam();setStat('');camMsg('Camera is off. Tap Start camera.')}save();if(sy.on)syncNow()}
+  else{rollDay();if(nfcOn)nfcStart(nfcTap,nfcSay);if(sy.on)syncNow()}})}catch(e){}}
 function photosLeft(){try{return !!localStorage.getItem('qrAttPhotos')}catch(e){return false}}
 function showPhotoCleanup(){var c=document.getElementById('phClean');if(c)c.style.display=(!phHide&&(photosLeft()||phRepo))?'block':'none'}
 async function cleanPhotos(){
@@ -2380,19 +2636,70 @@ async function linkCard1(){
  nfcMsg(p==='granted'?'Hold the card flat on the back of the phone and keep it still.':'Your phone will ask for NFC permission. Tap Allow, then hold the card flat on the back of the phone.');
  try{
   nfcStop();var ac=nfcAbort=new AbortController();to=setTimeout(function(){nfcCancel='time';ac.abort()},30000);
-  var rw=new NDEFReader(),recs=cardRecords(sid),idOnly=false;
+  var rw=new NDEFReader(),recs=cardRecords(sid),idOnly=false;nfcLogAdd('Add card pressed: ID '+sid+', '+recs.length+' record(s)');
   try{await rw.write({records:recs},{overwrite:true,signal:ac.signal})}
-  catch(e1){if(e1&&e1.name==='NotSupportedError'&&recs.length>1){nfcMsg('Trying again with the student ID only… keep the card on the phone.');await rw.write({records:recs.slice(-1)},{overwrite:true,signal:ac.signal});idOnly=true}else throw e1}
-  clearTimeout(to);nfcBusy=false;nfcAbort=null;formWritten=true;nfcIdle();showNfcForm();
-  nfcMsg((idOnly?'Card written with the student ID only (the link did not fit on this card). ':'Card written. ')+'Press Save to keep it. Then scan the card once on the Scan tab so the app learns it.');toast('Card written','ok')}
+  catch(e1){nfcLogAdd('write error: '+(e1&&e1.name)+(e1&&e1.message?' - '+String(e1.message).slice(0,120):''));if(e1&&e1.name==='NotSupportedError'&&recs.length>1){nfcMsg('Trying again with the student ID only… keep the card on the phone.');await rw.write({records:recs.slice(-1)},{overwrite:true,signal:ac.signal});idOnly=true}else throw e1}
+  clearTimeout(to);nfcBusy=false;nfcAbort=null;formWritten=true;if(window.AndroidApp&&window.__lastWrittenShort)idOnly=true;var wid=window.AndroidApp?normUid(window.__lastWrittenId):'',dupW=wid?students.filter(function(z){return z.nfc===wid&&z.u!==editId})[0]:null;if(wid&&!dupW)formNfc=wid;nfcIdle();showNfcForm();
+  nfcMsg((idOnly?'Card written with the student ID only (the link did not fit on this card). ':'Card written. ')+(dupW?'But this card is already linked to '+dupW.n+'. Unlink it there first.':(wid?'The card is linked. Press Save to keep it.':'Press Save to keep it. Then scan the card once on the Scan tab so the app learns it.')),!!dupW);if(dupW){toast('Card is already linked to '+dupW.n+'. Unlink it first.','bad')}else{toast('Card written','ok')}}
  catch(e){clearTimeout(to);nfcBusy=false;nfcAbort=null;nfcIdle();var n=e&&e.name;
-  if(n==='AbortError'){nfcMsg(nfcCancel==='time'?'No card was detected in 30 seconds. Make sure NFC is on, then hold the card flat against the back of the phone (usually near the camera). The card must be an NFC tag such as NTAG213 or NTAG215. If NFC Tools says your card is MIFARE Classic, a web page cannot write it: use the link below with NFC Tools instead.':'Cancelled.',nfcCancel==='time');return}
-  nfcMsg((n==='NotSupportedError'?'This card cannot be written. It may be locked, or the wrong type. Use an NTAG213, NTAG215 or NTAG216 card. School IDs, bank cards and MIFARE Classic cards cannot be used: use the link below with NFC Tools instead.':nfcErr(e))+'  ['+(n||'error')+(e&&e.message?': '+e.message:'')+']',1)}}
+  if(n==='AbortError'){nfcMsg(nfcCancel==='time'?'No card was detected in 30 seconds. Make sure NFC is on, then hold the card flat against the back of the phone (usually near the camera). The card must be an NFC tag such as NTAG213 or NTAG215. '+(window.AndroidApp?'You can also tap Read card ID, which links any card by its serial number without writing.':'If NFC Tools says your card is MIFARE Classic, a web page cannot write it: use the link below with NFC Tools instead.'):'Cancelled.',nfcCancel==='time');return}
+  nfcMsg((e&&e.friendly?e.friendly:n==='NotSupportedError'?'This card cannot be written. It may be locked, or the wrong type. Use an NTAG213, NTAG215 or NTAG216 card. School IDs, bank cards and MIFARE Classic cards cannot be used: use the link below with NFC Tools instead.':nfcErr(e))+'  ['+(n||'error')+(e&&e.message?': '+e.message:'')+']',1)}}
+var nfcLogLines=[];
+function nfcLogAdd(m){var d=new Date(),t=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+':'+('0'+d.getSeconds()).slice(-2);
+ nfcLogLines.push(t+' '+String(m||''));if(nfcLogLines.length>14)nfcLogLines.shift();
+ var e=document.getElementById('nfcLog');if(e){e.textContent='NFC log\n'+nfcLogLines.join('\n');e.scrollTop=e.scrollHeight}}
+window.nfcLogAdd=nfcLogAdd;
+async function nfcOnce(ms){
+ var why=nfcWhyNot();if(why)throw {friendly:why};
+ if(nfcOn)nfcScanOff();
+ nfcStop();var ac=nfcAbort=new AbortController(),r=new NDEFReader(),tm=0;
+ return await new Promise(function(res,rej){
+  var done=false;
+  function fin(f,v){if(done)return;done=true;clearTimeout(tm);nfcAbort=null;try{ac.abort()}catch(e){}f(v)}
+  r.addEventListener('reading',function(e){fin(res,e)});
+  tm=setTimeout(function(){fin(rej,{name:'AbortError',timeout:true})},ms||30000);
+  ac.signal.addEventListener('abort',function(){fin(rej,{name:'AbortError',timeout:nfcCancel==='time'})});
+  r.scan({signal:ac.signal}).catch(function(e){fin(rej,e)})})}
+async function readCardId(){
+ if(nfcBusy)return;nfcBusy=true;nfcCancel='';
+ var b=document.getElementById('nfcRead');if(b)b.textContent='Hold a card on the phone…';
+ nfcMsg('Hold the card flat on the back of the phone.');
+ try{var e=await nfcOnce(30000),id=normUid(e.serialNumber);
+  if(!id){nfcMsg('The card did not give an ID. Try again.',1)}
+  else{var d=students.filter(function(z){return z.nfc===id&&z.u!==editId})[0];
+   if(d){nfcMsg('This card is already linked to '+d.n+'. Unlink it there first.',1);toast('Card is already linked to '+d.n+'. Unlink it first.','bad')}
+   else{formNfc=id;showNfcForm();nfcMsg('Card ID read'+(e.tech?' ('+e.tech+')':'')+'. Press Save to keep it. Tapping this card will now record attendance.');toast('Card ID read','ok')}}}
+ catch(x){nfcMsg(x&&x.timeout?'No card was detected in 30 seconds. Hold the card flat on the back of the phone (usually near the camera) and try again.':(x&&x.name==='AbortError'?'Cancelled.':nfcErr(x)),1)}
+ nfcBusy=false;if(b)b.textContent='Read card ID (link only)'}
+async function checkCard(){
+ if(nfcBusy)return;nfcBusy=true;nfcCancel='';
+ var b=document.getElementById('nfcCheck');if(b)b.textContent='Hold a card on the phone…';
+ nfcMsg('Hold a card on the back of the phone.');
+ try{var e=await nfcOnce(30000),id=fmtUid(normUid(e.serialNumber)),i=ndefInfo(e.message),st=students.filter(function(z){return z.nfc===normUid(e.serialNumber)})[0],bits=[];
+  bits.push('ID '+id);if(e.tech)bits.push(e.tech);
+  if(e.writable===true)bits.push('can be written');else if(e.writable===false)bits.push('read-only for this phone');
+  bits.push(i.tok?'has a card link':(i.txt?'text: '+i.txt:'no app data on it'));
+  bits.push(st?'linked to '+st.n:'not linked to a student');
+  nfcMsg(bits.join(' · '))}
+ catch(x){nfcMsg(x&&x.timeout?'No card was detected in 30 seconds.':(x&&x.name==='AbortError'?'Cancelled.':nfcErr(x)),1)}
+ nfcBusy=false;if(b)b.textContent='Check card'}
 function unlinkCard(){formNfc='';formWritten=false;showNfcForm();nfcMsg('Card will be unlinked when you press Save.')}
 function nfcSay(t,bad){var e=document.getElementById('nfcStat');e.textContent=t;e.style.color=bad?'var(--red)':'var(--mu)'}
-function nfcScanOff(){nfcOn=false;nfcStop();var b=document.getElementById('nfcBtn');if(b){b.textContent='NFC card scanning: OFF';b.classList.remove('on')}}
+function nfcScanOff(){nfcOn=false;nfcStop();var b=document.getElementById('nfcBtn');if(b){b.textContent='NFC card scanning: OFF';b.classList.remove('on')}var hs=document.getElementById('nfcHomeStat');if(hs)hs.style.display='none'}
+var nfcPref=(function(){try{return localStorage.getItem('qrAttNfcScan')!=='0'}catch(e){return true}})(),nfcStarting=false;
+function nfcScreenOk(){var s=document.querySelector('.screen.on');return !!s&&(s.id==='home'||s.id==='scan')}
+function nfcStatus(t,bad){nfcSay(t,bad);var e=document.getElementById('nfcHomeStat');if(e){e.textContent=t||'';e.style.color=bad?'var(--red)':'var(--mu)';e.style.display=t?'block':'none'}}
+function updNfcBtn(){var b=document.getElementById('nfcBtn');if(!b)return;b.textContent=nfcOn?'NFC card scanning: ON \u2014 tap to stop':'NFC card scanning: OFF';b.classList.toggle('on',!!nfcOn)}
+/* in the app: scanning is on by itself on Home and Scan, and off everywhere else (so writing or checking a card never records attendance) */
+async function nfcAuto(){
+ if(!window.AndroidApp)return;
+ if(!nfcPref||!nfcScreenOk()||nfcBusy){if(nfcOn)nfcScanOff();return}
+ if(nfcOn||nfcStarting||nfcWhyNot())return;
+ nfcStarting=true;
+ try{var ok=await nfcStart(nfcTap,nfcStatus);if(ok){if(nfcPref&&nfcScreenOk()&&!nfcBusy){nfcOn=true;updNfcBtn()}else{nfcStop();nfcStatus('')}}}catch(e){}
+ nfcStarting=false}
 function nfcTap(id,txt,tok){
- var now=Date.now(),key=id||tok||txt||'';if(key===nfcLast&&now-nfcAt<3000)return;nfcLast=key;nfcAt=now;
+ var now=Date.now(),key=id||tok||txt||'';if(key===nfcLast&&now-nfcAt<1000)return;nfcLast=key;nfcAt=now;
  var st=id?students.filter(function(z){return z.nfc===id})[0]:null,m=/^ATT\|(.+)$/.exec(String(txt||'').trim());
  if(!st&&tok){st=students.filter(function(z){return z.k===tok})[0]||null;if(st&&id&&!st.nfc){st.nfc=id;st.mt=Date.now();save();drawStudents();toast('Card learned for '+st.n,'info')}}
  if(!st&&m){var w=students.filter(function(z){return z.i===m[1]})[0];
@@ -2402,29 +2709,113 @@ function nfcTap(id,txt,tok){
  act(st)}
 async function toggleNfcScan(){try{await toggleNfcScan1()}catch(e){nfcOn=false;nfcSay('Something went wrong: '+(e&&e.message||e),1)}}
 async function toggleNfcScan1(){
+ if(window.AndroidApp){nfcPref=!nfcPref;try{localStorage.setItem('qrAttNfcScan',nfcPref?'1':'0')}catch(e){}
+  if(!nfcPref){nfcScanOff();nfcStatus('');nfcSay('NFC scanning is off. Turn it on here to scan cards on Home and Scan.');toast('NFC scanning off','info')}
+  else{await nfcAuto();toast(nfcOn?'NFC scanning on (Home and Scan)':'NFC could not start','info')}
+  return}
  if(nfcOn){nfcScanOff();nfcSay('');toast('NFC scanning off','info');return}
  var ok=await nfcStart(nfcTap,nfcSay);
  if(ok){nfcOn=true;var b=document.getElementById('nfcBtn');b.textContent='NFC card scanning: ON — tap to stop';b.classList.add('on');toast('NFC scanning on','info')}}
-var APP_VER='2026-11-09 NFC fix 4';
-function initNfcUi(){var av=document.getElementById('appVer');if(av)av.textContent='App version: '+APP_VER;var why=nfcWhyNot();if(why){var b=document.getElementById('nfcBtn');b.disabled=true;b.style.opacity=.55;nfcSay(why);var a=document.getElementById('nfcAllow');if(a)a.style.display='none'}}
-document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&nfcOn)nfcStart(nfcTap,nfcSay)});
+var APP_VER='2026-11-10 fix 19 · '+(window.AndroidApp?'native Android app':'web version');
+function initNfcUi(){var av=document.getElementById('appVer');if(av)av.textContent='App version: '+APP_VER;
+ if(window.AndroidApp){var h=document.getElementById('nfcHint'),h2=document.getElementById('nfcHint2');
+  if(h)h.innerHTML='<b>Add card</b> writes the ID and a link onto the card (NTAG and MIFARE Classic) and links it. <b>Read card ID</b> only links the card by its serial number, with no writing: it works with every MIFARE card on every phone. <b>Check card</b> shows what a card is, like NFC Tools.';
+  if(h2)h2.innerHTML='Some phones cannot write MIFARE Classic cards because of their NFC chip (the same limit NFC Tools has). If Add card fails, use <b>Read card ID</b>. Reading and attendance scanning work with every card.';
+  var ab=document.getElementById('nfcAllowBtn');if(ab)ab.style.display='none';var lg=document.getElementById('nfcLog');if(lg){lg.style.display='none'};var an=document.getElementById('nfcAllow');if(an)an.style.display='none'}
+ else{var rb=document.getElementById('nfcRead');if(rb)rb.style.display='inline-block'}var why=nfcWhyNot();if(why){var b=document.getElementById('nfcBtn');b.disabled=true;b.style.opacity=.55;nfcSay(why);var a=document.getElementById('nfcAllow');if(a)a.style.display='none'}}
+document.addEventListener('visibilitychange',function(){
+ if(document.visibilityState==='visible'){
+  if(typeof nfcBusy!=='undefined'&&nfcBusy){nfcBusy=false;if(typeof nfcAbort!=='undefined')nfcAbort=null;if(typeof nfcIdle==='function')nfcIdle()}
+  if(window.AndroidApp&&typeof sync==='function'){try{sync()}catch(e){}}
+  if(typeof nfcOn!=='undefined'&&nfcOn&&typeof nfcStart==='function')nfcStart(nfcTap,nfcSay)
+ }
+});
 function stByKey(k){var raw=(k||'').trim(),k2=raw.toLowerCase(),isUid=/^[0-9a-f:\s-]{8,}$/i.test(raw),u=isUid?normUid(raw):'';return students.filter(function(x){return x.i.toLowerCase()===k2||x.n.toLowerCase()===k2||(u&&x.nfc===u)})[0]}
 function beep(f){try{var A=window.AudioContext||window.webkitAudioContext,c=beep.c||(beep.c=new A()),o=c.createOscillator(),g=c.createGain();o.frequency.value=f;g.gain.value=0.08;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+0.13)}catch(e){}}
 var flashT=0;
 function flashCam(kind,st,tag){var cam=document.querySelector('.cam'),fl=document.getElementById('camFlash');clearTimeout(flashT);cam.classList.remove('ok','late','bad');if(!kind)return;cam.classList.add(kind);fl.innerHTML='<div>'+'<span style="font-size:56px;line-height:1">'+(kind==='ok'?'✓':kind==='late'?'!':'✕')+'</span><br>'+esc(st?st.n:'')+'<br><span style="font-size:15px;font-weight:600">'+esc(tag)+'</span></div>';if(kind==='ok')beep(880);flashT=setTimeout(function(){cam.classList.remove('ok','late','bad')},1700)}
 function showRes(st,tag,cls,note){var kind=tag==='Present'?'ok':(tag==='Late'||tag==='Already in')?'late':tag==='Warning'?'bad':'';document.getElementById('resCard').className='card result '+(kind||(cls==='t-abs'?'bad':''));flashCam(kind,st,tag);var nm=st?st.n:'';toast(kind==='ok'?nm+' recorded as Present':tag==='Late'?nm+' recorded as Late':tag==='Already in'?nm+' is already recorded':tag==='Warning'?'Warning saved for '+nm+' · '+String(note).split(' · ')[0]:note,kind==='ok'||tag==='Done'?'ok':(kind==='late'||tag==='Warning')?'warn':'bad');document.getElementById('rAv').textContent=st?ini(st.n):'!';document.getElementById('rName').textContent=st?st.n:note;document.getElementById('rId').textContent=st?'ID '+st.i+' \u00b7 '+st.sec:'';var t=document.getElementById('rTag');t.textContent=tag;t.className='tag '+cls;document.getElementById('rNote').textContent=st?note:'';document.getElementById('resCard').style.borderLeftColor=cls==='t-abs'?'var(--red)':cls==='t-late'?'var(--warn)':'var(--ok)'}
+var voiceOn=(function(){try{return localStorage.getItem('qrAttVoice')!=='0'}catch(e){return true}})();
+function formatSpokenName(name){
+ if(!name) return '';
+ var s = String(name).trim();
+ if(s.indexOf(',') > -1){
+  var parts = s.split(',');
+  var last = parts[0].trim();
+  var first = parts.slice(1).join(' ').trim();
+  s = first + ' ' + last;
+ }
+ return s.replace(/\S+/g, function(w){
+  if(w.length <= 2 && w === w.toUpperCase() && !/^[AEIOU]+$/.test(w)) return w;
+  return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+ });
+}
+
+function normalizeSpeechText(text){
+ if(!text) return '';
+ var s = String(text);
+ s = s.replace(/\bNFC\b/gi, 'N F C');
+ s = s.replace(/\bQR\b/gi, 'Q R');
+ s = s.replace(/\bID\b/gi, 'I D');
+ s = s.replace(/\bBSIT\b/gi, 'B S I T');
+ s = s.replace(/\bUID\b/gi, 'U I D');
+ s = s.replace(/\bSAO\b/gi, 'S A O');
+ s = s.replace(/\b[0-9a-f]{2}(:[0-9a-f]{2}){3,7}\b/gi, '');
+ s = s.replace(/[_|#]+/g, ' ');
+ s = s.replace(/\s+/g, ' ').trim();
+ if(s && !/[.!?]$/.test(s)) s += '.';
+ return s;
+}
+
+function speak(t){
+ if(!voiceOn || !t) return;
+ var normalized = normalizeSpeechText(t);
+ if(!normalized) return;
+ try{
+  if(window.AndroidApp && typeof AndroidApp.speak === 'function'){
+   AndroidApp.speak(normalized);
+   return;
+  }
+  if(window.speechSynthesis){
+   speechSynthesis.cancel();
+   var u = new SpeechSynthesisUtterance(normalized);
+   u.lang = 'en-US';
+   u.rate = 1.05;
+   u.pitch = 1.0;
+   speechSynthesis.speak(u);
+  }
+ }catch(e){}
+}
+function speakable(n){ return formatSpokenName(n); }
+var voiceMode=(function(){try{var v=localStorage.getItem('qrAttVoiceMode');return (v==='last'||v==='first')?v:'none'}catch(e){return 'none'}})();
+function firstName(n){n=String(n||'').trim();var s=n.indexOf(',')>-1?n.split(',').slice(1).join(' ').trim():n;return s.split(/\s+/)[0]||''}
+function sayStatus(st,ph,gen){
+ if(!voiceOn)return;
+ var nm = '';
+ var fullName = st ? (st.n || '') : '';
+ if(voiceMode==='last') nm = formatSpokenName(lastName(fullName));
+ else if(voiceMode==='first') nm = formatSpokenName(firstName(fullName));
+ else if(fullName) nm = formatSpokenName(fullName);
+ if(nm) speak(nm + ' ' + ph + '.');
+ else speak(gen + '.');
+}
+function updVoice(){var b=document.getElementById('voiceBtn');if(b){b.textContent='Voice: '+(voiceOn?'ON':'OFF');b.classList.toggle('on',voiceOn)}var m=document.getElementById('voiceModeBtn');if(m)m.textContent=voiceMode==='last'?'Say: Last name':voiceMode==='first'?'Say: First name':'Name: OFF'}
+function toggleVoiceMode(){if(voiceMode==='none')voiceMode='last';else if(voiceMode==='last')voiceMode='first';else voiceMode='none';try{localStorage.setItem('qrAttVoiceMode',voiceMode)}catch(e){}updVoice()}
+function toggleVoice(){voiceOn=!voiceOn;try{localStorage.setItem('qrAttVoice',voiceOn?'1':'0')}catch(e){}updVoice()}
 function mark(st,status){
  var s=subs[si];if(!s){showRes(null,'Error','t-abs','Add a subject first (Subjects tab).');return false}
  var k0=ymd(cur);if(!isClassDay(s,k0)){var o2=meetsOn(k0,s),w2=same(cur,today)?'today':'that day';showRes(null,'No class','t-abs','There is no class '+(same(cur,today)?'today':'on this day')+' for '+s.c+' (it meets '+s.d+').'+(o2.length?' '+o2.map(function(z){return z.c}).join(', ')+' meets '+w2+', so pick that subject instead.':'')+' If a make-up class was held, mark it in Records.');return false}
  lastSt=st;var k=ymd(cur),ex=s.r.filter(function(x){return x.d===k&&x.i===st.i})[0];
- if(ex){showRes(st,'Already in','t-late','Already recorded as '+ex.s+' at '+ex.t+' \u00b7 '+s.n);return false}
+ if(ex){var nw=Date.now();if(!(window.__dupSay&&window.__dupSay.i===st.i&&nw-window.__dupSay.t<1000)){window.__dupSay={i:st.i,t:nw};sayStatus(st,ex.s==='Present'?'is already present':ex.s==='Late'?'is already marked late':'is already recorded','Already recorded')}
+  showRes(st,'Already in','t-late','Already recorded as '+ex.s+' at '+ex.t+' \u00b7 '+s.n);return false}
  var now=new Date(),t=hm(now.getHours()*60+now.getMinutes());
  s.r.push({ts:Date.now(),d:k,n:st.n,i:st.i,t:t,s:status,w:0});
+ if(status==='Present')sayStatus(st,'is present','Present');else if(status==='Late')sayStatus(st,'is late','Late');
  showRes(st,status,status==='Late'?'t-late':'t-ok','Recorded '+f(cur,{month:'short',day:'numeric',year:'numeric'})+' \u00b7 '+t+' \u00b7 '+s.n);
  if(navigator.vibrate)navigator.vibrate(60);drawHome();drawRecs();save();return true
 }
 function onCode(txt){
- var now=Date.now();if(txt===lastCode&&now-lastAt<3000)return;lastCode=txt;lastAt=now;
+ var now=Date.now();if(txt===lastCode&&now-lastAt<1000)return;lastCode=txt;lastAt=now;
  var p=String(txt).split('|');
  if(p[0]!=='ATT'){showRes(null,'Not ours','t-abs','That QR code is not from this app. It says: '+String(txt).slice(0,40));return}
  var st=stByKey(p[1]);
@@ -2438,17 +2829,42 @@ function camMsg(t){document.getElementById('camHint').textContent=t}
 async function decode(cv){
  try{if(window.BarcodeDetector){bd=bd||new BarcodeDetector({formats:['qr_code']});var r=await bd.detect(cv);if(r[0])return r[0].rawValue}}catch(e){}
  try{var x=cv.getContext('2d').getImageData(0,0,cv.width,cv.height);return qrDecode(x.data,x.width,x.height)}catch(e){return null}}
+var camBusy=false,tickId=0,camDeny=0;
+function camErr(e){var n=e&&e.name;
+ if(n==='NotAllowedError'||n==='SecurityError'||n==='PermissionDeniedError')return window.AndroidApp?'Camera permission is off. Tap Start camera again and choose Allow. If no question appears, the app settings will open: tap Permissions, then Camera, then Allow.':'Camera permission is off. Open the phone Settings, then Apps, then this app, then Permissions, set Camera to Allow, and try again. You can still use Scan from photo or type the ID.';
+ if(n==='NotFoundError'||n==='DevicesNotFoundError')return 'No camera was found on this device. Use Scan from photo or type the ID.';
+ if(n==='NotReadableError'||n==='TrackStartError')return 'The camera is being used by another app. Close that app and try again.';
+ return 'The camera could not start'+(n?' ('+n+')':'')+'. Use Scan from photo or type the ID.'}
+async function getCam(){
+ var tries=[{video:{facingMode:{ideal:face},width:{ideal:1280},height:{ideal:720}},audio:false},{video:{facingMode:face},audio:false},{video:true,audio:false}],last;
+ for(var i=0;i<tries.length;i++){
+  try{return await navigator.mediaDevices.getUserMedia(tries[i])}
+  catch(e){last=e;var n=e&&e.name;if(n==='NotAllowedError'||n==='SecurityError'||n==='NotReadableError'||n==='PermissionDeniedError')break}}
+ throw last}
 async function startCam(){
+ if(camBusy||stream)return;
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camMsg('Camera is not available here. Use Scan from photo or type the ID.');return}
- try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:face},audio:false});var v=document.getElementById('vid');v.srcObject=stream;v.style.display='block';await v.play();document.getElementById('camHint').style.display='none';document.getElementById('camBtn').textContent='Stop camera';setStat('Looking for a QR code…');tick()}
- catch(e){stopCam();setStat('');camMsg('Camera blocked or unavailable here. Use Scan from photo or type the ID.')}}
-function stopCam(){if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}var v=document.getElementById('vid');v.style.display='none';v.srcObject=null;document.getElementById('camHint').style.display='';document.getElementById('camBtn').textContent='Start camera'}
+ camBusy=true;camMsg('Starting camera…');
+ try{
+  var s=await getCam();
+  if(!document.getElementById('scan').classList.contains('on')){s.getTracks().forEach(function(t){t.stop()});return}
+  stream=s;var v=document.getElementById('vid');v.setAttribute('playsinline','');v.muted=true;v.srcObject=s;v.style.display='block';
+  var tr=s.getVideoTracks()[0];if(tr)tr.addEventListener('ended',function(){if(stream===s){stopCam();setStat('');camMsg('The camera stopped. Tap Start camera.')}});
+  await v.play();document.getElementById('camHint').style.display='none';document.getElementById('camBtn').textContent='Stop camera';setStat('Looking for a QR code…');
+  camDeny=0;try{if(window.AndroidApp)AndroidApp.keepAwake(true)}catch(z){}tick(++tickId)}
+ catch(e){stopCam();setStat('');var m=camErr(e);camMsg(m);toast(m,'bad');if(window.AndroidApp&&e&&e.name==='NotAllowedError'){if(++camDeny>=2){camDeny=0;try{AndroidApp.openAppSettings()}catch(z){}}}}
+ finally{camBusy=false}}
+function stopCam(){tickId++;try{if(window.AndroidApp)AndroidApp.keepAwake(false)}catch(z){}if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}var v=document.getElementById('vid');v.style.display='none';v.srcObject=null;document.getElementById('camHint').style.display='';document.getElementById('camBtn').textContent='Start camera'}
 function toggleCam(){if(stream){stopCam();setStat('');camMsg('Camera is off')}else startCam()}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'&&stream){stopCam();setStat('');camMsg('Camera is off. Tap Start camera.')}});
 function flipCam(){face=face==='environment'?'user':'environment';if(stream){stopCam();startCam()}}
-async function tick(){
- if(!stream)return;var v=document.getElementById('vid');
- if(!busy&&v.readyState>=2&&v.videoWidth){busy=true;var c=document.createElement('canvas');var sc=Math.min(1,1280/Math.max(v.videoWidth,v.videoHeight));c.width=Math.round(v.videoWidth*sc);c.height=Math.round(v.videoHeight*sc);c.getContext('2d').drawImage(v,0,0,c.width,c.height);var r=await decode(c);busy=false;if(r)onCode(r)}
- setTimeout(tick,200)}
+async function tick(my){
+ if(!stream||my!==tickId)return;var v=document.getElementById('vid');
+ if(!busy&&v.readyState>=2&&v.videoWidth){
+  busy=true;
+  try{var c=document.createElement('canvas'),sc=Math.min(1,1280/Math.max(v.videoWidth,v.videoHeight));c.width=Math.round(v.videoWidth*sc);c.height=Math.round(v.videoHeight*sc);c.getContext('2d',{willReadFrequently:true}).drawImage(v,0,0,c.width,c.height);var r=await decode(c);if(r&&my===tickId)onCode(r)}catch(e){}
+  busy=false}
+ if(stream&&my===tickId)setTimeout(function(){tick(my)},180)}
 function scanPhoto(inp){var f=inp.files[0];if(!f)return;var im=new Image();im.onload=async function(){var c=document.createElement('canvas'),sc=Math.min(1,1200/Math.max(im.width,im.height));c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(im.src);var r=await decode(c);if(r)onCode(r);else showRes(null,'No QR','t-abs','Could not find a QR code in that photo. Try again, closer and in good light.');inp.value=''};im.src=URL.createObjectURL(f)}
 var warnOn=false,lateOn=false,armW=-1,armWT=0;
 function wk(w){return [w.d,w.ts||w.t,w.i,w.r,w.note].join('|')}
@@ -2463,7 +2879,7 @@ function toggleLate(){lateOn=!lateOn;if(lateOn)warnOn=false;updMode();toast(late
 function pushWarn(st,reason,note){
  var s=subs[si],now=new Date(),t=hm(now.getHours()*60+now.getMinutes()),k=ymd(cur);
  warns.unshift({ts:Date.now(),d:k,t:t,n:st.n,i:st.i,sub:s?s.c:'\u2014',r:reason,note:note});
- if(s)s.r.forEach(function(x){if(x.d===k&&x.i===st.i)x.w=(x.w||0)+1});
+ if(s)s.r.forEach(function(x){if(x.d===k&&x.i===st.i){x.w=(x.w||0)+1;x.mt=Date.now()}});
  drawWarns();drawHome();drawRecs();save();return warns.filter(function(w){return w.i===st.i}).length}
 function lateFor(st){
  if(!mark(st,'Late'))return;
@@ -2474,14 +2890,15 @@ function act(st){if(warnOn)warnFor(st);else if(lateOn)lateFor(st);else mark(st,'
 function warnFor(st){
  var s=subs[si],now=new Date(),t=hm(now.getHours()*60+now.getMinutes()),k=ymd(cur),reason=document.getElementById('wReason').value;
  lastSt=st;warns.unshift({ts:Date.now(),d:k,t:t,n:st.n,i:st.i,sub:s?s.c:'\u2014',r:reason,note:val('wNote')});
- if(s)s.r.forEach(function(x){if(x.d===k&&x.i===st.i)x.w=(x.w||0)+1});
+ if(s)s.r.forEach(function(x){if(x.d===k&&x.i===st.i){x.w=(x.w||0)+1;x.mt=Date.now()}});
  var cnt=warns.filter(function(w){return w.i===st.i}).length;
+ sayStatus(st,'has a warning','Warning');
  showRes(st,'Warning','t-abs',reason+' \u00b7 warning #'+cnt+' \u00b7 '+t);
  if(navigator.vibrate)navigator.vibrate([80,40,80]);drawWarns();drawHome();drawRecs();save()}
 function delWarn(ix){var w=warns[ix];if(!w)return;
  if(armW!==ix){armW=ix;clearTimeout(armWT);armWT=setTimeout(function(){armW=-1;drawWarns()},3000);drawWarns();return}
  dead['w:'+wk(w)]=Date.now();warns.splice(ix,1);armW=-1;toast('Warning removed for '+w.n,'ok');
- subs.forEach(function(s){if(s.c===w.sub)s.r.forEach(function(x){if(x.d===w.d&&x.i===w.i&&x.w>0)x.w--})});
+ subs.forEach(function(s){if(s.c===w.sub)s.r.forEach(function(x){if(x.d===w.d&&x.i===w.i&&x.w>0){x.w--;x.mt=Date.now()}})});
  drawWarns();drawHome();drawRecs();save()}
 var openW='';
 function togW(ix){var w=warns[ix];if(!w)return;var k=wk(w);openW=openW===k?'':k;drawWarns()}
@@ -2491,25 +2908,31 @@ function wlShort(w){var ls=lettersFor(w);if(!ls.length)return '<span class="wl n
  return '<span class="wl"><i class="tag '+STC[stOf(l)]+'">'+STL[stOf(l)]+'</i><em>'+esc(LTS[l.ty])+' \u00b7 '+esc(f(new Date(l.date+'T00:00'),{month:'short',day:'numeric'}))+(ls.length>1?' \u00b7 '+ls.length+' letters':'')+'</em></span>'}
 function wlFull(w,ix){var ls=lettersFor(w);if(!ls.length)return '<button class="btn ghost sm" style="margin-top:8px" onclick="newLetterFrom('+ix+')">Make letter from this warning</button>';
  return '<div class="wlbox"><b>Letters for this warning</b>'+ls.map(function(l){var st=stOf(l),mk=st==='san'&&canSao(l)&&!l.nx?'<button class="btn sm" onclick="makeSaoLetter(\''+l.id+'\')">Make SAO letter</button>':'';
-  return '<div class="wlr"><div><b>'+esc(LTS[l.ty])+'</b> \u00b7 '+esc(longDate(l.date))+' <i class="tag '+STC[st]+'">'+STL[st]+'</i>'+(l.sn?'<div class="hint" style="margin:2px 0 0">'+esc(l.sn)+'</div>':'')+'</div><div class="acts">'+mk+'<button class="btn '+(mk?'ghost ':'')+'sm" onclick="stOpen(\''+l.id+'\')">Record</button><button class="btn ghost sm" onclick="openPreview(\''+l.id+'\')">Preview</button><button class="btn ghost sm" onclick="emOpen(\''+l.id+'\')">Email</button></div></div>'}).join('')+'</div>'}
+  return '<div class="wlr"><div><b>'+esc(LTS[l.ty])+'</b> \u00b7 '+esc(longDate(l.date))+' <i class="tag '+STC[st]+'">'+STL[st]+'</i>'+(l.sn?'<div class="hint" style="margin:2px 0 0">'+esc(l.sn)+'</div>':'')+'</div><div class="acts">'+mk+'<button class="btn '+(mk?'ghost ':'')+'sm" onclick="stOpen(\''+l.id+'\')">Record</button><button class="btn ghost sm" onclick="openPreview(\''+l.id+'\')">Preview</button></div></div>'}).join('')+'</div>'}
 function drawWarns(){
  var c={},seen={},byD={},lastD='',sfx=['','1st','2nd','3rd'];warns.forEach(function(w){c[w.i]=(c[w.i]||0)+1;byD[w.d]=(byD[w.d]||0)+1});
  document.getElementById('wList').innerHTML=warns.length?warns.map(function(w,ix){seen[w.i]=(seen[w.i]||0)+1;var o=c[w.i]-seen[w.i]+1,k=wk(w),op=openW===k,nth=sfx[o]||o+'th',dd=new Date(w.d+'T00:00'),when=f(dd,{month:'short',day:'numeric',year:'numeric'})+' \u00b7 '+w.t,hd='';
   if(w.d!==lastD){lastD=w.d;hd='<div class="mh"><b>'+f(dd,{weekday:'long',month:'long',day:'numeric'})+(same(dd,today)?' \u00b7 Today':'')+'</b><small>'+byD[w.d]+' warning'+(byD[w.d]===1?'':'s')+'</small></div>'}
   return hd+'<div class="wrow"><div class="row wmain" onclick="togW('+ix+')"><div class="av">'+esc(ini(w.n))+'</div><div class="grow"><b>'+esc(w.n)+'</b><span>'+esc([w.r,w.note].filter(Boolean).join(' \u00b7 '))+'</span>'+wlShort(w)+'</div><span class="tag '+(o>=2&&w.r!=='Failed to clean'?'t-abs':'t-late')+'">'+(w.r==='Failed to clean'?'Notice':nth)+'</span><span class="chev">'+(op?'\u25b4':'\u25be')+'</span><button class="btn ghost sm" onclick="event.stopPropagation();delWarn('+ix+')" aria-label="Delete warning">'+(armW===ix?'Sure?':'\u2715')+'</button></div>'+(op?'<div class="wdet"><div><b>Reason</b> '+esc(w.r)+'</div><div><b>Note</b> '+(w.note?esc(w.note):'\u2014')+'</div><div><b>When</b> '+esc(when)+'</div><div><b>Subject</b> '+esc(w.sub)+'</div><div><b>Warning</b> '+nth+' for this student</div>'+wlFull(w,ix)+'</div>':'')+'</div>'}).join(''):'<p style="color:var(--mu);margin:0">No warnings recorded yet.</p>'}
 load();
-var sy={tok:'',repo:'',on:false},syTimer=0,syBusy=false,syAgain=false;
+var sy={tok:'',repo:'',on:false},syTimer=0,syBusy=false,syAgain=false,syAt=0;
 try{var _s=JSON.parse(localStorage.getItem('qrAttSync')||'null');if(_s&&_s.tok)sy=_s}catch(e){}
 function syMsg(t,bad,c){document.getElementById('syncState').textContent=t;document.getElementById('syncState').style.color=bad?'var(--red)':'var(--mu)';document.getElementById('syncT').textContent=c||t;document.getElementById('sync').classList.toggle('sync',!bad)}
 function showSync(){document.getElementById('syncForm').style.display=sy.on?'none':'block';document.getElementById('syncOn').style.display=sy.on?'grid':'none';syMsg(sy.on?'Connected to '+sy.repo+'.':'Not set up. Your data is only on this device.',0,'Saved on this device')}
 function b64e(t){return btoa(unescape(encodeURIComponent(t)))}function b64d(t){return decodeURIComponent(escape(atob(t.replace(/\s/g,''))))}
-async function gh(path,o){o=o||{};var u='https://api.github.com'+path+((o.m&&o.m!=='GET')?'':(path.indexOf('?')>-1?'&':'?')+'_='+Date.now());var r=await fetch(u,{method:o.m||'GET',headers:Object.assign({'Authorization':'Bearer '+sy.tok,'Accept':o.raw?'application/vnd.github.raw+json':'application/vnd.github+json'},o.body?{'Content-Type':'application/json'}:{}),body:o.body?JSON.stringify(o.body):undefined});
- if(r.status===404&&o.ok404)return null;if(!r.ok){var e=new Error('GitHub '+r.status);e.status=r.status;throw e}return o.raw?r.text():r.json()}
+async function gh(path,o){o=o||{};
+ var u='https://api.github.com'+path+((o.m&&o.m!=='GET')?'':(path.indexOf('?')>-1?'&':'?')+'_='+Date.now()),ac=new AbortController(),tm=setTimeout(function(){ac.abort()},25000);
+ try{
+  var r=await fetch(u,{method:o.m||'GET',cache:'no-store',signal:ac.signal,headers:Object.assign({'Authorization':'Bearer '+sy.tok,'Accept':o.raw?'application/vnd.github.raw+json':'application/vnd.github+json'},o.body?{'Content-Type':'application/json'}:{}),body:o.body?JSON.stringify(o.body):undefined});
+  if(r.status===404&&o.ok404)return null;
+  if(!r.ok){var e=new Error('GitHub '+r.status);e.status=r.status;throw e}
+  return o.raw?await r.text():await r.json()}
+ finally{clearTimeout(tm)}}
 function merge(a,b){
  a=a||{};b=b||{};var ad=a.dead||{},bd2=b.dead||{},dd={};
  Object.keys(ad).concat(Object.keys(bd2)).forEach(function(k){dd[k]=Math.max(ad[k]||0,bd2[k]||0)});
  var st={};(b.students||[]).concat(a.students||[]).forEach(function(x){var o=st[x.i];if(!o||(x.mt||0)>=(o.mt||0))st[x.i]=x});
- var alive={},sts=Object.keys(st).sort().map(function(k){return st[k]}).filter(function(x){var t=dd['s:'+x.i];return !t||(x.mt||0)>t}).sort(stuCmp);
+ var alive={},sts=Object.keys(st).sort().map(function(k){return st[k]}).filter(function(x){var t=dd['s:'+x.i];return !t||(x.mt||0)>t});
  sts.forEach(function(x){alive[x.i]=1});
  var ren2={};Object.keys(b.ren||{}).concat(Object.keys(a.ren||{})).forEach(function(k){ren2[k]=(a.ren&&a.ren[k])||b.ren[k]});
  var rn={};Object.keys(ren2).sort().forEach(function(k){rn[k]=ren2[k]});
@@ -2526,13 +2949,11 @@ function merge(a,b){
  var lt=Object.keys(lm).sort().map(function(k){return lm[k]}).filter(function(l){var t=dd['l:'+l.id];return !t||(l.mt||0)>t});
  var ls=(a.lset&&(!b.lset||(a.lset.mt||0)>=(b.lset.mt||0)))?a.lset:(b.lset||{});
  var dk={};Object.keys(dd).sort().forEach(function(k){dk[k]=dd[k]});
- var ea=emFix(a.em),eb=emFix(b.em),en=ea.mt>=eb.mt?ea:eb,eo=en===ea?eb:ea,emap={};Object.keys(Object.assign({},eo.map,en.map)).sort().forEach(function(k){emap[k]=en.map[k]||eo.map[k]});
- var em={svc:en.svc,tpl:en.tpl,key:en.key,from:en.from,map:emap,att:en.att,gas:en.gas,gsec:en.gsec,mt:en.mt};
- return {students:sts,subs:sbs,warns:wr,letters:lt,lset:ls,dead:dk,ren:rn,uid:Math.max(a.uid||100,b.uid||100),em:em}}
+ return {students:sts,subs:sbs,warns:wr,letters:lt,lset:ls,dead:dk,ren:rn,uid:Math.max(a.uid||100,b.uid||100)}}
 function applyMerged(m){
  var key=subs[si]?subs[si].c+'|'+subs[si].n:'',before=JSON.stringify(snap(true));
  if(JSON.stringify(m)===before)return;
- students=m.students;sortStu();subs=m.subs;warns=m.warns;letters=m.letters||[];lset=m.lset||{};dead=m.dead;ren=m.ren||{};uid=m.uid;emc=emFix(m.em);
+ students=m.students;subs=m.subs;warns=m.warns;letters=m.letters||[];lset=m.lset||{};dead=m.dead;ren=m.ren||{};uid=m.uid;
  si=0;subs.forEach(function(x,i){if(x.c+'|'+x.n===key)si=i});
  drawStudents();drawSubs();render();drawWarns();drawLetters();save()}
 function schedSync(){clearTimeout(syTimer);syTimer=setTimeout(function(){syncNow()},4000)}
@@ -2544,9 +2965,9 @@ function syWhy(e){var c=e&&e.status;
  if(!c)return 'Could not reach GitHub. Check your internet, or turn off Brave Shields or an ad blocker for this site.';
  return 'Sync failed (GitHub '+c+'). It will try again soon.'}
 async function syncNow(manual){
- if(!sy.on)return;if(syBusy){syAgain=true;return}
+ if(!sy.on)return;if(syBusy&&Date.now()-syAt>90000)syBusy=false;if(syBusy){syAgain=true;return}
  if(!navigator.onLine){syMsg('Offline. Your data is saved here and will sync when you are back online.',0,'Offline \u00b7 will sync');return}
- syBusy=true;syMsg('Syncing\u2026',0,'Syncing\u2026');
+ syBusy=true;syAt=Date.now();syMsg('Syncing\u2026',0,'Syncing\u2026');
  try{
   var path='/repos/'+sy.repo+'/contents/attendance-data.json';
   for(var tries=0;tries<4;tries++){
@@ -2557,7 +2978,7 @@ async function syncNow(manual){
    try{await gh(path,{m:'PUT',body:{message:'sync',content:b64e(out),sha:sha}});break}catch(e){if((e.status===409||e.status===422)&&tries<3)continue;throw e}}
   if(!phChecked){phChecked=true;try{var pd=await gh('/repos/'+sy.repo+'/contents/photos',{ok404:1});phRepo=Array.isArray(pd)&&pd.length>0}catch(e){}showPhotoCleanup()}
   var n=new Date();syMsg('Synced at '+hm(n.getHours()*60+n.getMinutes())+'.',0,'Synced '+hm(n.getHours()*60+n.getMinutes()))
- }catch(e){syMsg(syWhy(e),1,'Sync problem')}
+ }catch(e){syMsg(syWhy(e),1,'Sync problem');if(e&&e.status!==401&&e.status!==404){clearTimeout(syTimer);syTimer=setTimeout(function(){syncNow()},e.status===403?120000:20000)}}
  var bad=!document.getElementById('sync').classList.contains('sync');if(bad){if(manual||!syFail)toast(document.getElementById('syncState').textContent,'bad');syFail=1}else{syFail=0;if(manual)toast('Synced with the cloud','ok')}
  syBusy=false;if(syAgain){syAgain=false;schedSync()}}
 async function syncSetup(){
@@ -2569,7 +2990,7 @@ async function syncSetup(){
  catch(e){sy.on=false;syMsg(e.status===401?'GitHub did not accept that token. Check that you copied all of it.':e.status===404?'Could not find that repository, or the token cannot reach it.':'Could not connect. Check your internet and try again.',1,'Sync problem')}}
 function syncOff(){sy={tok:'',repo:'',on:false};try{localStorage.removeItem('qrAttSync')}catch(e){}showSync();toast('Cloud sync disconnected','info')}
 setInterval(function(){if(sy.on&&document.visibilityState==='visible')syncNow()},60000);
-document.addEventListener('visibilitychange',function(){if(sy.on&&document.visibilityState==='visible')syncNow()});
+document.addEventListener('visibilitychange',function(){if(!sy.on)return;if(document.visibilityState==='hidden')save();syncNow()});
 addEventListener('online',function(){if(sy.on)syncNow()});
 function rollDay(){var n=new Date();if(same(n,today))return;var was=same(cur,today);today=n;if(was)cur=new Date(n);render();drawRecs();drawWarns();toast('New day \u00b7 '+f(n,{weekday:'long',month:'long',day:'numeric'})+'. A fresh record has started.','info')}
 setInterval(rollDay,30000);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')rollDay()});addEventListener('focus',rollDay);
@@ -2600,7 +3021,7 @@ function letFill(o){var S=lset0(),g=function(id,v){document.getElementById(id).v
  g('lfFrom',S.from);g('lfPos',S.pos);g('lfSec',S.sec);g('lfSig',S.sig);g('lfRev',S.rev);g('lfRevT',S.revT);g('lfPaper',S.paper);
  editBody=o.body||null;editSubj=o.subj||'';showEdited();
  sigTmp.f=S.sf||'';sigTmp.r=S.sr||'';sigTmp.s=o.ss||'';['f','r','s'].forEach(sigShow);
- letTyChanged();lmsg('');letOpen=true;warnTab('new')}
+ letTyChanged();lmsg('');document.getElementById('letForm').style.display='block'}
 var editWk='',editSrc='',editBody=null,editSubj='',sigTmp={f:'',r:'',s:''},sgT='',sgInk=false,sgDown=false,sgLast=null;
 function sigShow(t){var e=document.getElementById('sgPv'+t);if(!e)return;e.innerHTML=sigTmp[t]?'<img alt="Signature" src="'+sigTmp[t]+'">':'No signature'}
 function keepSig(t){if(t!=='f'&&t!=='r')return false;lset=Object.assign({},lset,{mt:Date.now(),sf:sigTmp.f,sr:sigTmp.r});save();return true}
@@ -2635,10 +3056,10 @@ function sigUse(){if(!sgInk){toast('Draw your signature first.','bad');return}va
   var x=cv.getContext('2d');x.fillStyle='#111';x.beginPath();x.arc(sgLast[0],sgLast[1],3,0,7);x.fill();sgInk=true});
  cv.addEventListener('pointermove',function(e){if(!sgDown)return;e.preventDefault();var p=pt(e),x=cv.getContext('2d');x.strokeStyle='#111';x.lineWidth=6;x.lineCap='round';x.lineJoin='round';x.beginPath();x.moveTo(sgLast[0],sgLast[1]);x.lineTo(p[0],p[1]);x.stroke();sgLast=p});
  function up(){sgDown=false}cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);cv.addEventListener('pointerleave',up)})();
-function newLetter(){editLet=null;letFill({});document.getElementById('wTabs').scrollIntoView({behavior:'smooth',block:'start'})}
+function newLetter(){editLet=null;letFill({});document.getElementById('letForm').scrollIntoView({behavior:'smooth',block:'start'})}
 function showEdited(){var e=document.getElementById('lfEdited');if(e)e.style.display=(editBody||editSubj)?'block':'none'}
 function resetEdited(){editBody=null;editSubj='';showEdited();toast('Using the automatic text','info')}
-function closeLetter(){editLet=null;letOpen=false;warnTab('list')}
+function closeLetter(){editLet=null;document.getElementById('letForm').style.display='none'}
 function letPickStudent(){var i=document.getElementById('lfSt').value,x=students.filter(function(z){return z.i===i})[0];if(!x)return;
  document.getElementById('lfTo').value=toName(x.n);document.getElementById('lfSal').value=salOf(x.n);
  var P=priorOf(i);if(P[0]&&!document.getElementById('lfP1').value)document.getElementById('lfP1').value=P[0].d;
@@ -2647,8 +3068,8 @@ function newLetterFrom(ix){var w=warns[ix];if(!w)return;
  var P=priorOf(w.i,w.ts||0),ty=w.r==='Failed to clean'?4:Math.min(P.length+1,3),x=students.filter(function(z){return z.i===w.i})[0],nm=x?x.n:w.n;
  editLet=null;
  letFill({wk:wk(w),ty:String(ty),sid:w.i,to:toName(nm),sal:salOf(nm),inc:w.d,off:(w.r+(w.note?' ('+w.note+')':'')),rule:ruleOf(w.r),p1:ty===2&&P[0]?P[0].d:'',q1:ty===3&&P[0]?P[0].d:'',q2:ty===3&&P[1]?P[1].d:''});
- document.getElementById('wTabs').scrollIntoView({behavior:'smooth',block:'start'})}
-function editLetter(id){var L=letters.filter(function(l){return l.id===id})[0];if(!L)return;editLet=id;letFill(L);document.getElementById('wTabs').scrollIntoView({behavior:'smooth',block:'start'})}
+ document.getElementById('letForm').scrollIntoView({behavior:'smooth',block:'start'})}
+function editLetter(id){var L=letters.filter(function(l){return l.id===id})[0];if(!L)return;editLet=id;letFill(L);document.getElementById('letForm').scrollIntoView({behavior:'smooth',block:'start'})}
 function readLetter(now){var v=function(id){return document.getElementById(id).value.trim()};return {id:editLet||('L'+now.toString(36)+Math.random().toString(36).slice(2,6)),mt:now,ty:v('lfTy'),sid:v('lfSt'),date:v('lfDate'),to:v('lfTo'),sal:v('lfSal')||salOf(v('lfTo')),off:v('lfOff'),rule:v('lfRule'),by:v('lfBy')||'Class officers',fix:v('lfFix'),con:v('lfCon'),p1:v('lfP1'),act:v('lfAct'),comp:v('lfComp'),q1:v('lfQ1'),q2:v('lfQ2'),rec:v('lfRec'),inc:v('lfInc'),sao:v('lfSao'),ss:sigTmp.s,notes:v('lfNote'),body:editBody||undefined,subj:editSubj||undefined,pty:v('lfTy')==='5'?v('lfPt'):undefined,pd:v('lfTy')==='5'?v('lfPd'):undefined,ao:v('lfTy')==='5'?v('lfAo'):undefined,src:editSrc||undefined,wk:editWk||undefined}}
 function readSettings(now){var v=function(id){return document.getElementById(id).value.trim()};return {mt:now,from:v('lfFrom'),pos:v('lfPos'),sec:v('lfSec'),sig:v('lfSig'),rev:v('lfRev'),revT:v('lfRevT'),sf:sigTmp.f,sr:sigTmp.r,paper:document.getElementById('lfPaper').value}}
 function delLetter(id){
@@ -2660,27 +3081,16 @@ var STL={'':'Awaiting appeal',rec:'Recorded',app:'Appealed',san:'For SAO sanctio
 function stOf(l){return l.st||''}
 function canSao(l){return l.ty==='1'||l.ty==='2'||l.ty==='4'}
 function setLetFilt(k){letFilt=k;drawLetters()}
-var lmOpen='',wTab='log',letOpen=false;
-function lmTog(id){lmOpen=lmOpen===id?'':id;drawLetters()}
-function warnTab(k){wTab=k;var d=function(id,v){document.getElementById(id).style.display=v?'':'none'};
- d('wLogCard',k==='log');d('letCard',k!=='log');d('letForm',k==='new');d('letListPane',k==='list');d('letHint',k==='new');
- document.getElementById('letH').textContent=k==='new'?(editLet?'Edit letter':'New letter'):'Letters';
- document.querySelectorAll('#wTabs button').forEach(function(b){b.classList.toggle('on',b.dataset.k===k)})}
-function warnTabClick(k){if(k==='new'&&!letOpen){newLetter();return}warnTab(k)}
 function drawLetters(){var e=document.getElementById('letList');if(!e)return;
  var all=letters.slice().sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.mt||0)-(a.mt||0)}),cnt={all:all.length,'':0,app:0,san:0,rec:0};
  all.forEach(function(l){cnt[stOf(l)]++});
- var wl=document.getElementById('wtL');if(wl)wl.textContent=all.length;
  var fl=document.getElementById('letFilt');
  if(fl)fl.innerHTML=all.length?[['all','All'],['','Awaiting'],['app','Appealed'],['san','For SAO'],['rec','Recorded']].map(function(f){return '<button type="button" class="lfb'+(letFilt===f[0]?' on':'')+'" onclick="setLetFilt(\''+f[0]+'\')">'+f[1]+' <i>'+cnt[f[0]]+'</i></button>'}).join(''):'';
- var q=((document.getElementById('letQ')||{}).value||'').toLowerCase().trim();
- var L=(letFilt==='all'?all:all.filter(function(l){return stOf(l)===letFilt})).filter(function(l){return !q||String(l.to||'').toLowerCase().indexOf(q)>-1});
- e.innerHTML=L.length?L.map(function(l){var st=stOf(l),sub=[LT[l.ty],longDate(l.date)],op=lmOpen===l.id;
+ var L=letFilt==='all'?all:all.filter(function(l){return stOf(l)===letFilt});
+ e.innerHTML=L.length?L.map(function(l){var st=stOf(l),sub=[LT[l.ty],longDate(l.date)];
   var note=[];if(l.inc)note.push('Incident: '+longDate(l.inc));if(l.sd&&st)note.push('Marked on '+longDate(l.sd));if(l.sn)note.push(l.sn);if(l.nx)note.push('SAO letter made');
-  var mk=st==='san'&&canSao(l)&&!l.nx?'<div class="lsao"><button class="btn" onclick="makeSaoLetter(\''+l.id+'\')">Make SAO letter</button></div>':'';
-  return '<div class="lcard'+(op?' open':'')+'"><div class="lhead"><div class="av">'+esc(ini(salOf(l.to)+' '+toName(l.to).split(',')[0]))+'</div><div class="grow"><b>'+esc(l.to)+'</b><span class="m">'+esc(sub.join(' \u00b7 '))+'</span>'+(note.length?'<span class="m">'+esc(note.join(' \u00b7 '))+'</span>':'')+'<span class="tag '+STC[st]+'" style="margin-top:8px">'+STL[st]+'</span></div></div>'+mk+
-   '<div class="lacts"><div class="lact"><button class="btn sm" onclick="openPreview(\''+l.id+'\')">Preview</button><button class="btn ghost sm" onclick="emOpen(\''+l.id+'\')">Email</button><button class="btn ghost sm lmore" onclick="lmTog(\''+l.id+'\')">'+(op?'Less':'More')+'</button></div>'+
-   '<div class="lxtra"><button class="btn ghost sm" onclick="stOpen(\''+l.id+'\')">Record</button><button class="btn ghost sm" onclick="editLetter(\''+l.id+'\')">Edit</button><button class="btn ghost sm" onclick="delLetter(\''+l.id+'\')">'+(armL===l.id?'Sure?':'Delete')+'</button></div></div></div>'}).join(''):'<p style="color:var(--mu);margin:0">'+(all.length?'No letters match.':'No letters yet.')+'</p>'}
+  var mk=st==='san'&&canSao(l)&&!l.nx?'<button class="btn sm" onclick="makeSaoLetter(\''+l.id+'\')">Make SAO letter</button>':'';
+  return '<div class="row rw"><div class="av">'+esc(ini(salOf(l.to)+' '+toName(l.to).split(',')[0]))+'</div><div class="grow"><b>'+esc(l.to)+'</b><span>'+esc(sub.join(' · '))+'</span>'+(note.length?'<span>'+esc(note.join(' · '))+'</span>':'')+'</div><span class="tag '+STC[st]+'">'+STL[st]+'</span><div class="acts">'+mk+'<button class="btn '+(mk?'ghost ':'')+'sm" onclick="stOpen(\''+l.id+'\')">Record</button><button class="btn ghost sm" onclick="openPreview(\''+l.id+'\')">Preview</button><button class="btn ghost sm" onclick="editLetter(\''+l.id+'\')">Edit</button><button class="btn ghost sm" onclick="delLetter(\''+l.id+'\')" aria-label="Delete letter">'+(armL===l.id?'Sure?':'✕')+'</button></div></div>'}).join(''):'<p style="color:var(--mu);margin:0">'+(all.length?'No letters in this group.':'No letters yet.')+'</p>'}
 function stOpen(id){var l=letters.filter(function(z){return z.id===id})[0];if(!l)return;stId=id;stSel=stOf(l);
  document.getElementById('stTitle').textContent='Record for '+l.to;document.getElementById('stSub').textContent=LT[l.ty]+' · '+longDate(l.date);
  document.getElementById('stDate').value=l.sd||ymd(today);document.getElementById('stNote').value=l.sn||'';stDraw();document.getElementById('stModal').classList.add('on')}
@@ -2694,7 +3104,7 @@ function stSave(make){var l=letters.filter(function(z){return z.id===stId})[0];i
  var id=stId;stClose();drawLetters();drawWarns();save();toast('Record updated: '+STL[stOf(l)]+' for '+l.to,'ok');if(make)makeSaoLetter(id)}
 function makeSaoLetter(id){var l=letters.filter(function(z){return z.id===id})[0];if(!l)return;editLet=null;
  letFill({ty:'5',sid:l.sid,to:l.to,sal:l.sal,inc:l.inc,off:l.off,rule:l.rule,by:l.by,pty:l.ty,pd:l.date,ao:l.st==='app'?'denied':'none',src:l.id,wk:l.wk,date:ymd(today)});
- document.getElementById('wTabs').scrollIntoView({behavior:'smooth',block:'start'})}
+ document.getElementById('letForm').scrollIntoView({behavior:'smooth',block:'start'})}
 function letterPdf(L,S,IM,collect){
  if(collect)return letterPdf1(L,S,IM,true,1);
  var KS=[1,.96,.92,.88,.84,.8,.76],r;
@@ -2848,80 +3258,17 @@ async function pvEditReset(){if(!pv)return;if(!pv.L.body&&!pv.L.subj){var a=pvAu
  var a2=pvAuto();document.getElementById('lpSubj').value=a2.sub;document.getElementById('lpBody').value=parasToText(a2);await renderPv();toast('Back to the automatic text. Press Save to keep it.','info')}
 async function downloadPreview(){if(!pv)return;var L=pv.L,S=pv.S,IM=pv.IM;saveVia(letterFileName(L),letterPdf(L,S,IM),function(t,bad){toast(t,bad?'bad':'ok')})}
 async function dlLetter(id){var L=letters.filter(function(l){return l.id===id})[0];if(!L)return;var S=lset0();saveVia(letterFileName(L),letterPdf(L,S,await letterImgs(S,L)),function(t,bad){toast(t,bad?'bad':'ok')})}
-var EMK='qrEmailCfgV1',emCtx=null;
-try{var emj=JSON.parse(localStorage.getItem(EMK)||'null');if(emj&&!emc.mt){emc=emFix(Object.assign({},emj,{mt:Date.now()}));save()}if(emj)localStorage.removeItem(EMK)}catch(e){}
-function emSaveCfg(){emc.mt=Date.now();save()}
-function emV(id){return document.getElementById(id).value.trim()}
-function emCanShare(){try{return !!(navigator.canShare&&navigator.canShare({files:[new File(['x'],'a.pdf',{type:'application/pdf'})]}))}catch(e){return false}}
-function emGas(){return !!(emc.gas&&emc.gsec)}
-function emAny(){return emGas()}
-function emMode(){document.getElementById('emMsg').textContent=emGas()?'Direct sending is on (Google). The signed PDF is sent right away, with your additional message.':'Direct sending is off. Send will save the PDF and open your email app with the address, subject and your message filled in. Attach the PDF there, or set up direct sending below.';
- document.getElementById('emShareBtn').style.display=!emAny()&&emCanShare()?'block':'none'}
-function emPdf(L,S){return letterImgs(S,L).then(function(IM){return new Promise(function(res,rej){var f=new FileReader();f.onload=function(){res({name:letterFileName(L),uri:f.result})};f.onerror=function(){rej(new Error('Could not make the PDF.'))};f.readAsDataURL(letterPdf(L,S,IM))})})}
-function emGasCode(sec){return ['var SECRET = "'+sec+'";','','function doGet() { return out({ok: true, info: "Letter sender is running"}); }','',
- 'function doPost(e) {','  try {','    var d = JSON.parse(e.postData.contents);','    if (d.secret !== SECRET) return out({ok: false, error: "Wrong password"});',
- '    if (String(d.to || "").indexOf("@") < 1) return out({ok: false, error: "Check the email address"});','    var opt = {name: d.fromName || "Class Officers"};',
- '    if (d.pdf) opt.attachments = [Utilities.newBlob(Utilities.base64Decode(d.pdf), "application/pdf", d.pdfName || "letter.pdf")];',
- '    MailApp.sendEmail(d.to, d.subject || "Letter", d.message || "", opt);','    return out({ok: true});','  } catch (err) {','    return out({ok: false, error: String(err)});','  }','}','',
- 'function out(o) {','  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);','}'].join('\n')}
-function emCopyScript(){var g=document.getElementById('emGsec');
- if(!g.value.trim()){var a=new Uint8Array(12);crypto.getRandomValues(a);g.value=Array.prototype.map.call(a,function(x){return ('0'+x.toString(16)).slice(-2)}).join('');emCfgIn()}
- var code=emGasCode(g.value.trim());
- var ok=function(){toast('Script copied. Paste it into script.google.com.','ok')},bad=function(){var t=document.createElement('textarea');t.value=code;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();var r=false;try{r=document.execCommand('copy')}catch(e){}t.remove();if(r)ok();else toast('Could not copy. Try again.','bad')};
- if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(ok,bad);else bad()}
-function emCfgIn(){emc.gas=emV('emGas');emc.gsec=emV('emGsec');emSaveCfg();emMode()}
-function emMailto(to,sub,ex){var b=(ex||'').replace(/\n/g,'\r\n');return 'mailto:'+to+'?subject='+encodeURIComponent(sub)+(b?'&body='+encodeURIComponent(b):'')}
-function emShow(L,S){emCtx={L:L,S:S};
- document.getElementById('emSub').textContent=LT[L.ty]+' for '+L.to;
- document.getElementById('emFrom').value=emc.from||S.from||'';
- document.getElementById('emNote').value='';var sx=emStu(L);document.getElementById('emTo').value=(sx&&sx.em)||(L.sid&&emc.map[L.sid])||'';
- document.getElementById('emGas').value=emc.gas;document.getElementById('emGsec').value=emc.gsec;
- document.getElementById('emSetup').open=false;emMode();document.getElementById('emModal').classList.add('on');
- if(!document.getElementById('emTo').value)setTimeout(function(){document.getElementById('emTo').focus()},50)}
-function emStu(L){if(!L)return null;var x=L.sid?students.filter(function(z){return z.i===L.sid})[0]:null;if(x)return x;var n=toName(L.to||'').toLowerCase().replace(/\s+/g,' ').trim();if(!n)return null;var m=students.filter(function(z){return toName(z.n).toLowerCase().replace(/\s+/g,' ').trim()===n});return m.length===1?m[0]:null}
-function emOpenPv(){if(pv)emShow(pv.L,pv.S)}
-function emOpen(id){var L=letters.filter(function(l){return l.id===id})[0];if(!L)return;emShow(Object.assign({},L),lset0())}
-function emClose(){document.getElementById('emModal').classList.remove('on');emCtx=null}
-function emBuild(L,S,fr,ex){
- var c=Object.assign({},L);delete c.body;delete c.subj;var a=letterPdf(c,S,{},true),ps=(L.body&&L.body.length)?L.body:a.slice(),sub=L.subj||a.sub,
- un=function(t){return t.replace(/\*\*/g,'')},from=[S.from,S.pos,S.sec].filter(Boolean).join(', ');
- var base='Date: '+longDate(L.date)+'\nTo: '+L.to+'\nFrom: '+from+'\nSubject: '+sub+'\n\n'+ps.map(un).join('\n\n')+'\n\nRespectfully,\n\n'+S.from+'\n'+S.sig+'\n\nReviewed by:\n'+S.rev+'\n'+S.revT+'\n\n--\nSent by '+fr;return {sub:sub,base:base,text:(ex?ex+'\n\n':'')+base}}
-function emSent(btn){btn.disabled=false;btn.textContent='Send letter'}
-async function emSend(){
- if(!emCtx)return;var L=emCtx.L,S=emCtx.S,to=emV('emTo'),fr=emV('emFrom'),btn=document.getElementById('emSendBtn');
- if(!fr){toast('Type who the letter is from.','bad');return}
- if(!/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(to)){toast('Type a valid email address.','bad');return}
- emc.from=fr;if(L.sid)emc.map[L.sid]=to;emSaveCfg();var sx=emStu(L);if(sx&&sx.em!==to){sx.em=to;sx.mt=Date.now();drawStudents();save()}
- var ex=emV('emNote'),m=emBuild(L,S,fr,ex);
- if(emGas()){
-  if(navigator.onLine===false){toast('You are offline. Connect to the internet to send.','bad');return}
-  btn.disabled=true;btn.textContent='Sending...';
-  try{var pf=await emPdf(L,S);
-   var r0=await fetch(emc.gas,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({secret:emc.gsec,to:to,fromName:fr,subject:m.sub,message:ex||' ',pdf:pf.uri.split(',')[1],pdfName:pf.name})});
-   var j0=null;try{j0=await r0.json()}catch(e){throw new Error('No reply from Google. Check that the web app is deployed with access set to Anyone.')}
-   if(!j0||!j0.ok)throw new Error((j0&&j0.error)||'Google could not send it.');
-   toast('Letter sent to '+to,'ok');emClose()}
-  catch(e){toast('Could not send: '+(e&&e.message?e.message:'check your connection'),'bad')}
-  emSent(btn);return}
- btn.disabled=true;
- try{var IM=await letterImgs(S,L);dlBlob(letterFileName(L),letterPdf(L,S,IM))}catch(e){emSent(btn);toast('Could not make the PDF.','bad');return}
- var url=emMailto(to,m.sub,ex);
- toast('PDF saved. Attach it to the email that opens.','info');btn.disabled=false;
- setTimeout(function(){location.href=url},350)}
-async function emShare(){
- if(!emCtx)return;var L=emCtx.L,S=emCtx.S,fr=emV('emFrom')||S.from;
- try{var m=emBuild(L,S,fr,emV('emNote')),IM=await letterImgs(S,L),f=new File([letterPdf(L,S,IM)],letterFileName(L),{type:'application/pdf'});
-  await navigator.share({files:[f],title:m.sub,text:emV('emNote')});emClose()}
- catch(e){if(!e||e.name!=='AbortError')toast('Could not share the PDF.','bad')}}
-function fitStu(){var st=document.getElementById('students');if(!st||!st.classList.contains('on')||window.innerWidth<860)return;var t=st.querySelector('.two'),top=t.getBoundingClientRect().top+window.scrollY;st.style.setProperty('--stH',Math.max(420,window.innerHeight-top-48)+'px')}
-(function(){var g0=go;go=function(k){g0(k);if(k==='students'){window.scrollTo(0,0);fitStu();setTimeout(fitStu,60)}}})();
-window.addEventListener('resize',fitStu);
-warnTab('log');
 var online=false;
 function toggleSync(){online=!online;var c=document.getElementById('sync');c.classList.toggle('sync',online);document.getElementById('syncT').textContent=online?'Online · Synced':'Offline · 3 pending'}
 function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
-document.getElementById('nm').oninput=document.getElementById('idn').oninput=function(){qr()};qr();applyRecMode();initNfcUi();drawStudents();drawSubs();drawWarns();showSync();if(sy.on)syncNow();render();go('home');showPhotoCleanup();drawLetters();handleCardUrl();
+document.getElementById('nm').oninput=document.getElementById('idn').oninput=function(){qr()};qr();applyRecMode();initNfcUi();updVoice();setTimeout(nfcAuto,400);drawStudents();drawSubs();drawWarns();showSync();if(sy.on)syncNow();render();go('home');showPhotoCleanup();drawLetters();handleCardUrl();nativeInit();
 </script>
-<script>if('serviceWorker' in navigator)addEventListener('load',function(){var had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){try{r.update()}catch(e){}}).catch(function(){});navigator.serviceWorker.addEventListener('controllerchange',function(){if(had&&!window.__swn){window.__swn=1;toast('A new version of the app is ready. Close the app and open it again to use it.','info')}})})</script>
+<script>if('serviceWorker' in navigator&&!window.AndroidApp&&!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()))addEventListener('load',function(){var had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){try{r.update()}catch(e){}}).catch(function(){});navigator.serviceWorker.addEventListener('controllerchange',function(){if(had&&!window.__swn){window.__swn=1;toast('A new version of the app is ready. Close the app and open it again to use it.','info')}})})</script>
+<script>(function(){var d=document;
+['gesturestart','gesturechange','gestureend'].forEach(function(t){d.addEventListener(t,function(e){e.preventDefault()},{passive:false})});
+d.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault()},{passive:false});
+d.addEventListener('contextmenu',function(e){var t=e.target;if(!(t&&/^(INPUT|TEXTAREA)$/.test(t.tagName)))e.preventDefault()});
+})();</script>
+<script src="ai-mail.js"></script>
 </body>
 </html>
