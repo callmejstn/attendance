@@ -33,6 +33,20 @@
     pending: {}             // requestId -> { bubble, raw, done, error }
   };
 
+  // Free online AI (no API key). Questions + a compact class summary are sent
+  // to Pollinations' public endpoint. The free tier allows about one answer
+  // every 45 seconds per IP, so the app waits and retries once when needed.
+  var LS_CLOUD = 'qrAttAiCloud';
+  var cloudAi = Object.assign({ enabled: true, cooldownUntil: 0 }, readJson(LS_CLOUD));
+  function saveCloudAi() {
+    writeJson(LS_CLOUD, { enabled: cloudAi.enabled !== false, cooldownUntil: cloudAi.cooldownUntil || 0 });
+  }
+  function cloudEnabled() { return cloudAi.enabled !== false; }
+  function cloudOnline() { return cloudEnabled() && !!navigator.onLine; }
+  function cloudCooldownSec() {
+    return Math.max(0, Math.ceil(((cloudAi.cooldownUntil || 0) - Date.now()) / 1000));
+  }
+
   function hasNativeAi() {
     return !!(window.AndroidApp && typeof window.AndroidApp.aiGenerate === 'function');
   }
@@ -80,6 +94,9 @@
     return String(v == null ? '' : v).replace(/[&<>"']/g, function (m) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
     });
+  }
+  function rxEscape(s) {
+    return String(s == null ? '' : s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
   function says(text) {
     if (typeof toast === 'function') { try { toast(text); } catch (e) {} }
@@ -217,11 +234,18 @@
         </div>
 
         <div class="ai-body" id="aiTabBodySettings" style="display:none">
-          <h4 style="margin:0 0 8px;font-size:14px">On-Device AI (Offline)</h4>
-          <p class="ai-note" style="margin:0 0 10px">This app now runs AI <b>on your device</b> using LiteRT-LM. No API key, no internet, and your class data stays on the phone.</p>
+          <h4 style="margin:0 0 8px;font-size:14px">AI Engine</h4>
+          <p class="ai-note" style="margin:0 0 10px">No API key is needed. When you are online, the assistant uses a <b>free public AI</b> for full, natural answers. Offline, it uses the on-device model if one is installed, then the built-in rule engine.</p>
+
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;margin-bottom:4px">
+            <input type="checkbox" id="aiUseCloud" onchange="updAiSettings()" style="margin-top:2px">
+            <span><b>Use free online AI when connected</b><br><span class="ai-note">No signup, no key. Allows about one answer every 45 seconds.</span></span>
+          </label>
+          <p class="ai-note" style="margin:2px 0 12px"><b>Privacy:</b> your question and a summary of class data (names, attendance counts, warnings) are sent to <code>text.pollinations.ai</code>, a third-party service. Turn this off to keep everything on the phone.</p>
 
           <div class="ai-card" style="margin-bottom:10px">
-            <div><b>Status:</b> <span id="localAiState">Checking…</span></div>
+            <div><b>Free online AI:</b> <span id="cloudAiState">Checking…</span></div>
+            <div style="margin-top:4px"><b>On-device model:</b> <span id="localAiState">Checking…</span></div>
             <div id="localAiModel" class="ai-note" style="margin-top:4px"></div>
             <div id="localAiMsg" class="ai-note" style="margin-top:6px;white-space:pre-wrap"></div>
           </div>
@@ -231,9 +255,9 @@
             <button class="btn ghost sm" onclick="aiResetLocal()">Reset AI session</button>
           </div>
 
-          <p class="ai-note" style="margin:-4px 0 12px"><b>Model setup:</b> copy a <code>.litertlm</code> model to the app (example):<br>
+          <p class="ai-note" style="margin:-4px 0 12px"><b>Optional on-device model:</b> copy a <code>.litertlm</code> model to the app (example):<br>
           <code>adb push your-model.litertlm /data/data/com.callmejstn.attendance/files/model.litertlm</code><br>
-          Or place it in <code>/data/local/tmp/llm/</code>. Then tap “Load / Reload model”.</p>
+          Or place it in <code>/data/local/tmp/llm/</code>. Then tap “Load / Reload model”. This is only needed for offline AI.</p>
 
           <h4 style="margin:12px 0 8px;font-size:14px">Auto-Email & Google Apps Script Settings</h4>
           <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:10px">
@@ -248,6 +272,7 @@
             <button class="btn ghost sm" onclick="copyGasCode()">Copy Updated GAS Script Code</button>
             <button class="btn ghost sm" onclick="flushOutbox()">Flush Outbox Queue (<span id="outboxCount">0</span>)</button>
           </div>
+          <p class="ai-note" style="margin:8px 0 0">After updating the script, redeploy the web app. The updated code adds one-tap AI email replies and reads longer student messages.</p>
         </div>
       </div>
     `;
@@ -272,10 +297,10 @@
               hint = 'Hello! I am running <b>on-device</b> with LiteRT-LM (no API key, no internet). I can read every record in this app. Ask me anything.';
             } else if (localAi.state === 'loading') {
               hint = 'The on-device AI model is loading. I can still answer common questions with the rule-based offline engine while it loads.';
-            } else if (navigator.onLine) {
-              hint = 'Hello! I am connected to <b>online keyless AI</b> (no API key needed). I can analyze your students, attendance records, and notices. Ask me anything!';
+            } else if (cloudOnline()) {
+              hint = 'Hello! I am using <b>free online AI</b> (no API key). I can read every record, write complete answers, draft emails, and create letters. Try “Create a warning letter for [name]”.';
             } else {
-              hint = 'Hello! You are currently offline. Running the <b>built-in rule engine</b> to answer questions about students, attendance, warnings, and letters.';
+              hint = 'Hello! Online AI is off or unavailable, so I am using the <b>built-in rule engine</b> for students, attendance, warnings, and letters.';
             }
             addBotMsg(hint, true);
             if (hasNativeAi() && localAi.state !== 'ready' && localAi.state !== 'loading') initLocalAi();
@@ -309,11 +334,12 @@
 
   function aiConfigured() {
     refreshLocalAiStatus();
-    return localAi.state === 'ready';
+    return cloudOnline() || localAi.state === 'ready';
   }
 
   function engineMode() {
     refreshLocalAiStatus();
+    if (cloudOnline()) return 'cloud';
     if (localAi.state === 'ready') return 'local';
     if (localAi.state === 'loading') return 'loading';
     if (localAi.state === 'missing_model') return 'missing';
@@ -324,7 +350,11 @@
     refreshLocalAiStatus();
     var el = document.getElementById('aiStatus');
     if (el) {
-      if (localAi.state === 'ready') {
+      if (cloudOnline()) {
+        el.textContent = 'online AI (free)';
+        el.className = 'ai-status online';
+        el.title = 'Free online AI is active. No API key needed.';
+      } else if (localAi.state === 'ready') {
         el.textContent = 'on-device AI';
         el.className = 'ai-status online';
         el.title = 'Offline on-device AI is ready.' + (localAi.modelPath ? ' Model: ' + localAi.modelPath : '');
@@ -332,14 +362,24 @@
         el.textContent = 'loading model…';
         el.className = 'ai-status offline';
         el.title = 'Loading the on-device model.';
-      } else if (navigator.onLine) {
-        el.textContent = 'online AI (free)';
-        el.className = 'ai-status online';
-        el.title = 'Keyless online AI is active. No API key needed!';
       } else {
         el.textContent = 'offline engine';
         el.className = 'ai-status offline';
-        el.title = 'Device is offline. Using rule-based offline engine.';
+        el.title = navigator.onLine
+          ? 'Free online AI is turned off in Settings. Using the built-in rule engine.'
+          : 'Device is offline. Using the built-in rule engine.';
+      }
+    }
+
+    var cs = document.getElementById('cloudAiState');
+    if (cs) {
+      if (!cloudEnabled()) {
+        cs.textContent = 'Off';
+      } else if (!navigator.onLine) {
+        cs.textContent = 'Waiting for internet';
+      } else {
+        var cd = cloudCooldownSec();
+        cs.textContent = cd > 0 ? ('Cooling down (' + cd + 's)') : 'Ready (free, no key)';
       }
     }
 
@@ -348,7 +388,7 @@
       var label = {
         ready: 'Ready (on-device, offline)',
         loading: 'Loading model…',
-        missing_model: 'Model file missing',
+        missing_model: 'Not installed (optional)',
         error: 'Error',
         idle: 'Not loaded',
         unavailable: 'Unavailable'
@@ -367,6 +407,7 @@
 
   function loadSettingsUI() {
     var a = document.getElementById('aiAutoSend'); if (a) a.checked = !!window.emc.autoSend;
+    var c = document.getElementById('aiUseCloud'); if (c) c.checked = cloudEnabled();
     var g = document.getElementById('aiGasUrl'); if (g) g.value = window.emc.gasUrl || '';
     var ob = document.getElementById('outboxCount'); if (ob) ob.textContent = (window.emc.outbox || []).length;
     updateAiStatus();
@@ -375,6 +416,9 @@
   window.updAiSettings = function () {
     window.emc.autoSend = !!(document.getElementById('aiAutoSend') || {}).checked;
     window.emc.gasUrl = ((document.getElementById('aiGasUrl') || {}).value || '').trim();
+    var c = document.getElementById('aiUseCloud');
+    if (c) cloudAi.enabled = !!c.checked;
+    saveCloudAi();
     saveEmc();
     updateAiStatus();
     says('Settings updated');
@@ -626,14 +670,23 @@
     addBotMsg('Chat cleared. Ask me anything about your students, attendance, warnings or letters.');
   };
 
+  var AI_RULES = [
+    'You are the built-in AI assistant of the "Bayan at Batas - Attendance" Android app for a teacher.',
+    'Use ONLY the APP DATA below. Never invent students, records, dates, numbers, or email addresses.',
+    'Be complete and specific. When asked for a list or report, include EVERY matching student with names, IDs and counts. Never end with "...", "and more", or a shortened list.',
+    'Long answers are allowed. When the user asks to list students or records, output every matching item, not a summary of them.',
+    'You may compute totals, compare students, explain trends, and draft notices or emails.',
+    'App commands the teacher can type: "Mark <student> present/late/absent", "Mark everyone present", "Create a warning letter for <student>".',
+    'When drafting an email, write "Subject: ..." first, then a complete body starting with "Dear" and ending with "Sincerely," followed by the sender signature. Do not add commentary after the signature.',
+    'Sign emails with "Sincerely," followed on the next line by "Class Adviser". Never use placeholders like [Your Name], [Your Title], or [School Contact Information].',
+    'Reply in the same language as the user (English or Filipino).'
+  ].join('\n');
+
   function buildAiPrompt(prompt, contextReply) {
     var ctx = buildAppContext();
     var parts = [];
-    parts.push('You are the built-in on-device AI assistant of "Bayan at Batas - Attendance".');
-    parts.push('Use ONLY the APP DATA below. Never invent students, records, dates, or numbers.');
-    parts.push('Answer clearly and specifically. Include names, IDs, counts, dates, and subjects when relevant.');
-    parts.push('If the user asks to perform an action (mark attendance, create letter), explain the exact command they can type.');
-    parts.push('Reply in the same language as the user (English or Filipino).');
+    parts.push(AI_RULES);
+    parts.push('If the user asks to perform an action (mark attendance, create a letter), explain the exact command they can type.');
     parts.push('');
     parts.push('APP DATA (' + (ctx.compact ? 'compact' : 'full') + '):');
     parts.push(ctx.text);
@@ -646,12 +699,148 @@
     if (recent.length) {
       parts.push('');
       parts.push('RECENT CHAT:');
-      recent.forEach(function (h) { parts.push((h.role === 'user' ? 'User' : 'Assistant') + ': ' + String(h.text || '').slice(0, 600)); });
+      recent.forEach(function (h) { parts.push((h.role === 'user' ? 'User' : 'Assistant') + ': ' + String(h.text || '').slice(0, 1200)); });
     }
     parts.push('');
     parts.push('USER QUESTION:');
     parts.push(String(prompt || ''));
     return parts.join('\n');
+  }
+
+  // Compact, cloud-safe context. Keeps the request small enough for the free
+  // endpoint while still describing every student and every day summary.
+  function buildCloudContext(prompt) {
+    var sts = allStudents();
+    var sbs = allSubjects();
+    var wrs = allWarns();
+    var lts = allLetters();
+    var today = todayKey();
+    var cur = sbs[currentSubjectIndex()] || sbs[0] || null;
+    var p = String(prompt || '').toLowerCase();
+
+    var totals = {};
+    sts.forEach(function (s) {
+      totals[s.i] = { present: 0, late: 0, absent: 0, recorded: 0, warnings: 0, letters: 0 };
+    });
+    wrs.forEach(function (w) { if (totals[w.i]) totals[w.i].warnings++; });
+    lts.forEach(function (l) { if (totals[l.st]) totals[l.st].letters++; });
+
+    var subjects = sbs.map(function (sub) {
+      var byDate = {};
+      (sub.r || []).forEach(function (r) {
+        var k = String(r.s || '').toLowerCase();
+        var t = totals[r.i];
+        if (t && t[k] !== undefined) { t[k]++; t.recorded++; }
+        var d = byDate[r.d] || (byDate[r.d] = { present: 0, late: 0, absent: 0 });
+        if (d[k] !== undefined) d[k]++;
+      });
+      return { subject: sub.n, code: sub.c || '', isCurrent: !!cur && sub === cur, days: byDate };
+    });
+
+    var todayRecs = cur ? (cur.r || []).filter(function (r) { return r.d === today; }).map(function (r) {
+      return { student: r.n || r.i, id: r.i, status: r.s, time: r.t || '' };
+    }) : [];
+
+    var students = sts.map(function (s) {
+      var t = totals[s.i] || {};
+      return {
+        name: s.n, id: s.i, section: s.sec || '', email: s.em || '', nfc: !!s.nfc,
+        present: t.present || 0, late: t.late || 0, absent: t.absent || 0,
+        recorded: t.recorded || 0, warnings: t.warnings || 0, letters: t.letters || 0
+      };
+    });
+
+    // If the question names a student or a date, add the matching detail rows so
+    // the model can answer with real dates instead of guessing.
+    var stop = { student: 1, students: 1, class: 1, present: 1, absent: 1, late: 1, record: 1, records: 1, show: 1, list: 1 };
+    var focus = null;
+    if (p) {
+      var byName = sts.slice().sort(function (a, b) { return String(b.n || '').length - String(a.n || '').length; });
+      var hit = byName.filter(function (s) {
+        return s.n && new RegExp('\\b' + rxEscape(String(s.n).toLowerCase()) + '\\b').test(p);
+      })[0];
+      if (!hit) {
+        hit = byName.filter(function (s) {
+          return String(s.n || '').toLowerCase().split(/\s+/).some(function (w) {
+            return w.length > 3 && !stop[w] && new RegExp('\\b' + rxEscape(w) + '\\b').test(p);
+          });
+        })[0];
+      }
+      if (hit) {
+        var recs = [];
+        sbs.forEach(function (sub) {
+          (sub.r || []).forEach(function (r) {
+            if (r.i === hit.i) recs.push({ subject: sub.n, date: r.d, status: r.s, time: r.t || '' });
+          });
+        });
+        focus = { name: hit.n, id: hit.i, section: hit.sec || '', email: hit.em || '', records: recs.slice(-80) };
+      }
+    }
+
+    var dateRecs = null;
+    var dateMatch = /(\d{4}-\d{2}-\d{2})/.exec(p);
+    var targetDate = dateMatch ? dateMatch[1] : null;
+    if (!targetDate && /\byesterday\b/.test(p)) targetDate = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    if (targetDate) {
+      dateRecs = [];
+      sbs.forEach(function (sub) {
+        (sub.r || []).forEach(function (r) {
+          if (r.d === targetDate) dateRecs.push({ subject: sub.n, student: r.n || r.i, id: r.i, status: r.s, time: r.t || '' });
+        });
+      });
+    }
+
+    var ctx = {
+      app: 'Bayan at Batas - Attendance (Android)',
+      today: today,
+      currentSubject: cur ? cur.n : null,
+      counts: { students: sts.length, subjects: sbs.length, warnings: wrs.length, letters: lts.length },
+      students: students,
+      subjects: subjects,
+      todayRecords: todayRecs,
+      warnings: wrs.slice(-80).map(function (w) {
+        return { student: w.n || '', id: w.i, date: w.d || '', reason: w.r || '', note: w.note || '' };
+      }),
+      letters: lts.slice(-80).map(function (l) {
+        return { id: l.id, type: letterTypeName(l.ty), student: l.to || '', date: l.date || '' };
+      })
+    };
+    if (focus) ctx.focusStudent = focus;
+    if (dateRecs && dateRecs.length) ctx.dateRecords = dateRecs;
+
+    var json = JSON.stringify(ctx);
+    if (json.length > 120000) {
+      ctx.subjects.forEach(function (s) { s.days = 'omitted (dataset too large)'; });
+      ctx.todayRecords = todayRecs.slice(0, 60);
+      json = JSON.stringify(ctx);
+    }
+    if (json.length > 160000) {
+      ctx.warnings = ctx.warnings.slice(-30);
+      ctx.letters = ctx.letters.slice(-30);
+      json = JSON.stringify(ctx);
+    }
+    return json;
+  }
+
+  function buildCloudMessages(prompt, contextReply) {
+    var messages = [{ role: 'system', content: AI_RULES }];
+    history.slice(-6).forEach(function (h) {
+      var txt = String(h.text || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 1200);
+      if (txt) messages.push({ role: h.role === 'user' ? 'user' : 'assistant', content: txt });
+    });
+    var parts = [];
+    parts.push('APP DATA (JSON):');
+    parts.push(buildCloudContext(prompt));
+    if (contextReply) {
+      parts.push('');
+      parts.push('APPEAL EMAIL TO ANALYZE (draft a complete, polite reply):');
+      parts.push(JSON.stringify({ from: contextReply.from, subject: contextReply.subject, body: contextReply.body, refId: contextReply.refId || null, date: contextReply.date }));
+    }
+    parts.push('');
+    parts.push('USER QUESTION:');
+    parts.push(String(prompt || ''));
+    messages.push({ role: 'user', content: parts.join('\n') });
+    return messages;
   }
 
   function handleLocalAiEvent(ev) {
@@ -700,6 +889,7 @@
       if (localAi.state === 'missing_model') { reject(new Error(localAi.message || 'No .litertlm model file found on the device.')); return; }
       var id = 'ai_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
       var bubble = addBotMsg('<span class="ai-note">Thinking on-device…</span>', true);
+      localAi.lastBubble = bubble;
       localAi.pending[id] = { bubble: bubble, raw: '', done: resolve, error: reject };
       try { window.AndroidApp.aiGenerate(id, buildAiPrompt(prompt, contextReply)); }
       catch (e) { delete localAi.pending[id]; reject(e); }
@@ -707,39 +897,179 @@
   }
 
   async function callOnlineFreeAi(prompt, contextReply) {
-    var fullPrompt = buildAiPrompt(prompt, contextReply);
-    var messages = [
-      {
-        role: 'system',
-        content: 'You are the intelligent assistant for the "Attendance" app. Answer questions, analyze attendance data, explain records, or compose formal notice drafts based on the provided APP DATA. Be concise, polite, and accurate. Format lists with bullets or bold text.'
-      },
-      {
-        role: 'user',
-        content: fullPrompt
-      }
-    ];
-
     var controller = new AbortController();
-    var timer = setTimeout(function () { controller.abort(); }, 25000);
+    var timer = setTimeout(function () { controller.abort(); }, 90000);
     try {
-      var res = await fetch('https://text.pollinations.ai/', {
+      var res = await fetch('https://text.pollinations.ai/openai?referrer=attendance-native', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
         body: JSON.stringify({
-          messages: messages,
           model: 'openai',
+          messages: buildCloudMessages(prompt, contextReply),
+          max_tokens: 3000,
+          temperature: 0.4,
           seed: Math.floor(Math.random() * 100000)
         })
       });
-      clearTimeout(timer);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      var text = await res.text();
+      var raw = await res.text();
+      if (!res.ok) {
+        var httpErr = new Error('Free AI returned HTTP ' + res.status);
+        httpErr.status = res.status;
+        var m = /retry\s+after\s+(\d+)\s*s/i.exec(raw) || /"retry_after"\s*:\s*(\d+)/i.exec(raw);
+        if (m) httpErr.retryAfter = parseInt(m[1], 10);
+        if (res.status === 402 || res.status === 429) {
+          httpErr.rateLimited = true;
+          if (!httpErr.retryAfter) httpErr.retryAfter = 45;
+        }
+        throw httpErr;
+      }
+      var text = raw;
+      if (/^\s*\{/.test(raw)) {
+        try {
+          var j = JSON.parse(raw);
+          if (j && j.choices && j.choices[0] && j.choices[0].message) {
+            text = j.choices[0].message.content || '';
+          } else if (j && j.error) {
+            var apiErr = new Error(j.error.message || ('Free AI error ' + (j.error.code || '')));
+            apiErr.rateLimited = j.error.code === 'FREE_LIMIT';
+            var m2 = /retry\s+after\s+(\d+)\s*s/i.exec(String(j.error.message || ''));
+            apiErr.retryAfter = m2 ? parseInt(m2[1], 10) : (apiErr.rateLimited ? 45 : 0);
+            throw apiErr;
+          }
+        } catch (parseErr) {
+          if (parseErr && (parseErr.rateLimited || parseErr.retryAfter)) throw parseErr;
+          text = raw;
+        }
+      }
+      text = String(text || '').trim();
+      if (!text) throw new Error('Free AI returned an empty answer.');
       return text;
-    } catch (err) {
+    } catch (e) {
+      if (e && e.name === 'AbortError') throw new Error('Free AI timed out after 90 seconds.');
+      throw e;
+    } finally {
       clearTimeout(timer);
-      throw err;
     }
+  }
+
+  function stripAiMarkup(text) {
+    return String(text || '')
+      .replace(/```[a-zA-Z0-9]*\n?/g, '').replace(/```/g, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/^\s*#{1,4}\s*/gm, '')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  function waitForCloud(bubble, seconds, label) {
+    return new Promise(function (resolve) {
+      var left = Math.max(1, Math.min(75, Math.ceil(seconds || 1)));
+      function tick() {
+        if (left <= 0) { resolve(); return; }
+        if (bubble) {
+          var inner = bubble.querySelector('.ai-bubble');
+          if (inner) inner.innerHTML = '<span class="ai-note">' + escHtml(label || 'Free AI is cooling down') + ' ' + left + 's…</span>';
+        }
+        left--;
+        setTimeout(tick, 1000);
+      }
+      tick();
+    });
+  }
+
+  var lastAiDraft = null; // { to, subject, body }
+
+  function openEmailApp(d) {
+    if (window.AndroidApp && typeof window.AndroidApp.composeEmail === 'function') {
+      try { window.AndroidApp.composeEmail(d.to, d.subject, d.body); return; } catch (e) {}
+    }
+    var href = 'mailto:' + encodeURIComponent(d.to) +
+      '?subject=' + encodeURIComponent(d.subject || '') +
+      '&body=' + encodeURIComponent(d.body || '');
+    try { window.location.href = href; } catch (e) {}
+  }
+
+  window.sendAiDraft = async function () {
+    if (!lastAiDraft) { says('No AI draft to send yet.'); return; }
+    var d = lastAiDraft;
+    if (d.to && window.emc.gasUrl && navigator.onLine) {
+      try {
+        says('Sending email…');
+        var res = await fetch(window.emc.gasUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'sendTextEmail', data: d })
+        });
+        var r = await res.json();
+        if (r && r.ok) { says('Email sent to ' + d.to); return; }
+        throw new Error((r && r.msg) || 'GAS error');
+      } catch (e) {
+        says('Could not send through Apps Script (' + e.message + '). Opening your email app.');
+      }
+    }
+    openEmailApp(d);
+  };
+
+  function parseEmailDraft(rawText, contextReply, prompt) {
+    var body = stripAiMarkup(rawText);
+    if (!body) return null;
+
+    var subject = (contextReply && contextReply.subject) ? ('Re: ' + contextReply.subject) : 'Email draft';
+    var subjMatch = /^\s*(?:subject|paksa)\s*:\s*(.+)$/im.exec(body);
+    if (subjMatch) {
+      subject = subjMatch[1].trim();
+      body = body.replace(/^\s*(?:subject|paksa)\s*:\s*.+\n?/im, '').trim();
+    }
+
+    var to = (contextReply && contextReply.from) || '';
+    var toMatch = /^\s*(?:to|recipient)\s*:\s*([^\s,;<>]+@[^\s,;<>]+)/im.exec(body);
+    if (toMatch) {
+      to = toMatch[1].trim();
+      body = body.replace(/^\s*(?:to|recipient)\s*:\s*.+\n?/im, '').trim();
+    }
+    if (!to && prompt) {
+      var hit = findStudentIn(prompt, allStudents());
+      if (hit && hit.em) to = hit.em;
+    }
+
+    var dear = body.search(/\bDear\b/i);
+    if (dear > 0) body = body.slice(dear).trim();
+
+    var looksEmail = /\bDear\b/i.test(body) && /\b(sincerely|regards|respectfully|thank you)\b/i.test(body);
+    if (!looksEmail) return null;
+
+    return { to: to, subject: subject, body: body };
+  }
+
+  function attachReplyButton(bubble, rawText, contextReply, prompt) {
+    if (!bubble) return;
+    var draft = parseEmailDraft(rawText, contextReply, prompt);
+    if (!draft) return;
+    lastAiDraft = draft;
+    var row = document.createElement('div');
+    row.className = 'ai-card-btns';
+    var btn = document.createElement('button');
+    btn.className = 'btn sm';
+    btn.textContent = (draft.to && window.emc.gasUrl) ? '✉ Send this email' : '✉ Open email draft';
+    btn.onclick = function () { window.sendAiDraft(); };
+    row.appendChild(btn);
+    bubble.appendChild(row);
+  }
+
+  function isAppAction(prompt) {
+    var t = String(prompt || '').trim();
+    if (/^(please\s+)?(mark|set|record)\s+/i.test(t)) {
+      return /(present|late|absent|class|everyone|all)\b/i.test(t);
+    }
+    if (/^(please\s+)?(create|make|issue|generate|write)\b/i.test(t) && /\b(letter|notice|warning|sanction|endorse\w*)\b/i.test(t)) return true;
+    if (/^(letter|notice|sanction|endorsement)\s+(for|to)\s+/i.test(t)) return true;
+    return false;
   }
 
   async function processAiPrompt(prompt, contextReply) {
@@ -748,49 +1078,92 @@
       initLocalAi();
       refreshLocalAiStatus();
     }
-    // 1. If on-device LiteRT-LM is available and model is loaded, use it
+
+    // App commands always run locally so they actually change data.
+    if (isAppAction(prompt)) {
+      var actRes = runOfflineAiEngine(prompt, contextReply);
+      addBotMsg(actRes, true);
+      history.push({ role: 'user', text: prompt });
+      history.push({ role: 'model', text: 'App action: ' + stripAiMarkup(actRes) });
+      saveHistory();
+      updateAiStatus();
+      return;
+    }
+
+    // 1. Free online AI (no key). Best quality when connected.
+    if (cloudOnline()) {
+      var bubble = addBotMsg('<span class="ai-note">Thinking with free online AI…</span>', true);
+      var answer = null;
+      var lastErr = null;
+      try {
+        var pre = cloudCooldownSec();
+        if (pre > 0) await waitForCloud(bubble, pre, 'Free AI is cooling down — answering in');
+        answer = await callOnlineFreeAi(prompt, contextReply);
+      } catch (e) {
+        lastErr = e;
+        if (e && e.rateLimited && e.retryAfter && e.retryAfter <= 60) {
+          cloudAi.cooldownUntil = Date.now() + (e.retryAfter * 1000);
+          saveCloudAi();
+          try {
+            await waitForCloud(bubble, e.retryAfter, 'Free AI is cooling down — answering in');
+            answer = await callOnlineFreeAi(prompt, contextReply);
+          } catch (e2) {
+            lastErr = e2;
+          }
+        }
+      }
+      if (answer) {
+        cloudAi.cooldownUntil = 0;
+        saveCloudAi();
+        var b = bubble ? bubble.querySelector('.ai-bubble') : null;
+        if (b) b.innerHTML = fmtAi(answer);
+        history.push({ role: 'user', text: prompt });
+        history.push({ role: 'model', text: answer });
+        saveHistory();
+        attachReplyButton(bubble, answer, contextReply, prompt);
+        updateAiStatus();
+        return;
+      }
+      if (lastErr && lastErr.rateLimited) {
+        cloudAi.cooldownUntil = Date.now() + Math.max(30, lastErr.retryAfter || 45) * 1000;
+        saveCloudAi();
+      }
+      if (bubble && bubble.parentNode) bubble.parentNode.removeChild(bubble);
+      addBotMsg('<span class="ai-note">Free online AI could not answer right now (' +
+        escHtml(lastErr && lastErr.message ? lastErr.message : 'unknown error') +
+        '). Trying the on-device engine and built-in rules below.</span>', true);
+      updateAiStatus();
+    }
+
+    // 2. On-device LiteRT-LM model, if installed and ready.
     if (hasNativeAi() && localAi.state === 'ready') {
       try {
         var localRes = await callLocalAi(prompt, contextReply);
         history.push({ role: 'user', text: prompt });
         history.push({ role: 'model', text: localRes });
         saveHistory();
+        attachReplyButton(localAi.lastBubble, localRes, contextReply, prompt);
         updateAiStatus();
         return;
       } catch (e) {
-        console.warn('Local AI failed, trying online AI:', e);
-      }
-    }
-
-    // 2. If online, use keyless online AI (no API key required!)
-    if (navigator.onLine) {
-      var botDiv = addBotMsg('<span class="ai-note">Thinking online (keyless AI)…</span>', true);
-      try {
-        var onlineRes = await callOnlineFreeAi(prompt, contextReply);
-        if (onlineRes && onlineRes.trim()) {
-          var bubble = botDiv ? botDiv.querySelector('.ai-bubble') : null;
-          if (bubble) bubble.innerHTML = fmtAi(onlineRes.trim());
-          history.push({ role: 'user', text: prompt });
-          history.push({ role: 'model', text: onlineRes.trim() });
-          saveHistory();
-          updateAiStatus();
-          return;
-        }
-      } catch (e) {
-        console.warn('Online AI failed, falling back to offline engine:', e);
-        if (botDiv) botDiv.remove();
+        console.warn('Local AI failed, falling back to built-in rules:', e);
+        addBotMsg('<span class="ai-note">On-device AI could not answer (' + escHtml(e.message || 'error') + '). Using the built-in rule engine.</span>', true);
       }
     } else if (localAi.state === 'loading') {
-      addBotMsg('<span class="ai-note">The on-device model is still loading. I used the rule-based offline engine for now.</span>', true);
-    } else if (localAi.state === 'missing_model') {
-      addBotMsg('<span class="ai-note">Offline mode: using the rule-based offline engine. Connect to the internet or push a .litertlm model for conversational AI.</span>', true);
+      addBotMsg('<span class="ai-note">The on-device model is still loading. I used the built-in rule engine for now.</span>', true);
+    } else if (localAi.state === 'missing_model' && !cloudEnabled()) {
+      addBotMsg('<span class="ai-note">Online AI is off and no on-device model is installed, so I used the built-in rule engine. Turn on <b>free online AI</b> in Settings for full answers.</span>', true);
     }
 
-    // 3. Fallback to rule-based offline engine
+    // 3. Rule-based fallback (works fully offline).
     var offlineRes = runOfflineAiEngine(prompt, contextReply);
-    addBotMsg(offlineRes, true);
+    var offBubble = addBotMsg(offlineRes, true);
+    if (contextReply) {
+      var draftMatch = /<div class="ai-card">([\s\S]*?)<\/div>/.exec(offlineRes);
+      attachReplyButton(offBubble, draftMatch ? draftMatch[1] : offlineRes, contextReply, prompt);
+    }
     history.push({ role: 'user', text: prompt });
-    history.push({ role: 'model', text: 'Offline answer: ' + offlineRes.replace(/<[^>]+>/g, '') });
+    history.push({ role: 'model', text: 'Offline answer: ' + stripAiMarkup(offlineRes) });
     saveHistory();
     updateAiStatus();
   }
@@ -826,7 +1199,7 @@
         if (per[r.i]) {
           if (per[r.i][k] !== undefined) per[r.i][k]++;
           per[r.i].recorded++;
-          if (per[r.i].records.length < 12) per[r.i].records.push({ subject: sub.n, date: r.d, status: status, time: r.t || '' });
+          if (per[r.i].records.length < 50) per[r.i].records.push({ subject: sub.n, date: r.d, status: status, time: r.t || '' });
         }
       });
       return {
@@ -956,7 +1329,7 @@
         var k = String(r.s || '').toLowerCase();
         if (t[k] !== undefined) t[k]++;
         t.recorded++;
-        if (t.entries.length < 10) t.entries.push({ subject: sub.n, date: r.d, status: r.s, time: r.t || '' });
+        if (t.entries.length < 60) t.entries.push({ subject: sub.n, date: r.d, status: r.s, time: r.t || '' });
       });
     });
     wrs.forEach(function (w) { if (byId[w.i]) byId[w.i].warnings++; });
@@ -986,12 +1359,9 @@
     };
   }
 
-  function listNames(arr, limit) {
-    limit = limit || 40;
+  function listNames(arr) {
     if (!arr.length) return '';
-    var shown = arr.slice(0, limit).map(function (x) { return '• ' + escHtml(x); }).join('<br>');
-    if (arr.length > limit) shown += '<br>…and ' + (arr.length - limit) + ' more.';
-    return shown;
+    return arr.map(function (x) { return '• ' + escHtml(x); }).join('<br>');
   }
 
   function statusLine(present, late, absent, unrecorded) {
@@ -1036,7 +1406,7 @@
       var a = mine.filter(function (r) { return r.s === 'Absent'; }).length;
       lines.push('<b>' + escHtml(sub.n) + '</b>: ' + statusLine(p, l, a) + ' · ' + mine.length + ' record(s)');
     });
-    var recent = item.entries.slice().sort(function (x, y) { return String(y.date).localeCompare(String(x.date)); }).slice(0, 8);
+    var recent = item.entries.slice().sort(function (x, y) { return String(y.date).localeCompare(String(x.date)); });
     var w = allWarns().filter(function (x) { return x.i === st.i; });
     var l = allLetters().filter(function (x) { return x.st === st.i; });
 
@@ -1051,11 +1421,11 @@
         return '• ' + escHtml(r.date) + ' · ' + escHtml(r.subject) + ' · <b>' + escHtml(r.status) + '</b>' + (r.time ? ' (' + escHtml(r.time) + ')' : '');
       }).join('<br>') : '') +
       '<br><br><b>Warnings:</b> ' + w.length +
-      (w.length ? '<br>' + w.slice(-5).map(function (x) {
+      (w.length ? '<br>' + w.map(function (x) {
         return '• ' + escHtml(x.d || '') + ' · ' + escHtml(x.r || '') + (x.note ? ' — ' + escHtml(x.note) : '');
       }).join('<br>') : '') +
       '<br><b>Letters:</b> ' + l.length +
-      (l.length ? '<br>' + l.slice(-5).map(function (x) {
+      (l.length ? '<br>' + l.map(function (x) {
         return '• #' + escHtml(x.id) + ' · ' + escHtml(letterTypeName(x.ty)) + ' · ' + escHtml(x.date || '');
       }).join('<br>') : '');
     return html;
@@ -1209,7 +1579,7 @@
     if (/most|top|highest|ranking|rank/.test(p)) {
       var metric = /late|tardy/.test(p) ? 'late' : (/absent|absence/.test(p) ? 'absent' : (/warning|offen[cs]e/.test(p) ? 'warnings' : 'late'));
       var ranked = v.students.slice().sort(function (a, b) { return (b[metric] || 0) - (a[metric] || 0); });
-      var nz = ranked.filter(function (x) { return (x[metric] || 0) > 0; }).slice(0, 10);
+      var nz = ranked.filter(function (x) { return (x[metric] || 0) > 0; });
       if (!nz.length) return 'No student has any recorded ' + metric + ' yet.';
       var label = metric === 'warnings' ? 'warnings' : metric;
       return '<b>Top students by ' + label + '</b><br>' + nz.map(function (x, i) {
@@ -1230,11 +1600,10 @@
     }
     if (/list|all|show/.test(p) && /letter|notice/.test(p)) {
       if (!v.letters.length) return 'No letters have been created yet.';
-      var l2 = v.letters.slice(-15).map(function (l) {
+      var l2 = v.letters.map(function (l) {
         return '• #' + l.id + ' · ' + letterTypeName(l.ty) + ' · ' + (l.to || '') + ' · ' + (l.date || '');
       });
-      return '<b>Letters (' + v.letters.length + ')</b><br>' + l2.join('<br>') +
-        (v.letters.length > 15 ? '<br>…showing the latest 15.' : '');
+      return '<b>Letters (' + v.letters.length + ')</b><br>' + l2.join('<br>');
     }
     if (/list|all|show|which/.test(p) && /subject/.test(p)) {
       if (!v.subjects.length) return 'No subjects yet.';
@@ -1244,9 +1613,9 @@
     }
     if (/warning|offen[cs]e/.test(p)) {
       if (!v.warnings.length) return 'No warnings recorded yet.';
-      return '<b>Warnings (' + v.warnings.length + ')</b><br>' + v.warnings.slice(-15).map(function (w) {
+      return '<b>Warnings (' + v.warnings.length + ')</b><br>' + v.warnings.map(function (w) {
         return '• ' + escHtml(w.n || '') + ' · ' + escHtml(w.r || '') + ' · ' + escHtml(w.d || '');
-      }).join('<br>') + (v.warnings.length > 15 ? '<br>…showing the latest 15.' : '');
+      }).join('<br>');
     }
     if (/how many|count|total/.test(p)) {
       return '<b>App totals</b><br>Students: <b>' + v.counts.students + '</b><br>Subjects: <b>' + v.counts.subjects +
@@ -1258,16 +1627,23 @@
       ' subjects</b> and every attendance record. I could not match that question to a report.<br><br>' +
       'Try asking:<br>• <i>Who is absent today?</i><br>• <i>Show the record of [student name]</i><br>' +
       '• <i>Who has the most absences?</i><br>• <i>List all students</i><br>• <i>Mark [name] present</i><br><br>' +
-      '<span class="ai-note">For free-form questions like “<i>' + escHtml(prompt) + '</i>”, add a Gemini API key in Settings.</span>';
+      '<span class="ai-note">For free-form questions like “<i>' + escHtml(prompt) + '</i>”, turn on <b>free online AI</b> (no key) in Settings.</span>';
   }
 
   // Debug hooks (harmless; lets the project be tested outside a WebView).
   window.aiDebug = {
     buildDataModel: buildDataModel,
     buildAppContext: buildAppContext,
+    buildCloudContext: buildCloudContext,
+    buildCloudMessages: buildCloudMessages,
     runOfflineAiEngine: runOfflineAiEngine,
     buildAiPrompt: buildAiPrompt,
     engineMode: engineMode,
+    cloud: function(){ return cloudAi; },
+    cloudCooldownSec: cloudCooldownSec,
+    isAppAction: isAppAction,
+    parseEmailDraft: parseEmailDraft,
+    sendAiDraft: window.sendAiDraft,
     localAi: function(){ return localAi; }
   };
 
@@ -1291,6 +1667,11 @@ function doPost(e) {
       GmailApp.sendEmail(item.to, item.subject, item.body, { attachments: [blob] });
       return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
     }
+    if (data.action === 'sendTextEmail') {
+      var msg = data.data;
+      GmailApp.sendEmail(msg.to, msg.subject, msg.body);
+      return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
+    }
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ ok: false, msg: err.toString() })).setMimeType(ContentService.MimeType.JSON);
   }
@@ -1302,7 +1683,7 @@ function doGet(e) {
     if (action === 'checkInbox') {
       var threads = GmailApp.search('subject:"[Ref:"');
       var replies = [];
-      for (var i = 0; i < Math.min(threads.length, 10); i++) {
+      for (var i = 0; i < Math.min(threads.length, 25); i++) {
         var msgs = threads[i].getMessages();
         if (msgs.length > 1) {
           var lastMsg = msgs[msgs.length - 1];
@@ -1311,7 +1692,7 @@ function doGet(e) {
           replies.push({
             from: lastMsg.getFrom(),
             subject: subj,
-            body: lastMsg.getPlainBody().slice(0, 300),
+            body: lastMsg.getPlainBody().slice(0, 4000),
             date: lastMsg.getDate().toISOString().slice(0, 10),
             refId: match ? Number(match[1]) : 0
           });
