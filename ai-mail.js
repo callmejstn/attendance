@@ -272,10 +272,10 @@
               hint = 'Hello! I am running <b>on-device</b> with LiteRT-LM (no API key, no internet). I can read every record in this app. Ask me anything.';
             } else if (localAi.state === 'loading') {
               hint = 'The on-device AI model is loading. I can still answer common questions with the rule-based offline engine while it loads.';
-            } else if (localAi.state === 'missing_model') {
-              hint = 'No on-device AI model file was found. I can still answer common questions using the rule-based engine. Open <b>Settings</b> for model setup steps.';
+            } else if (navigator.onLine) {
+              hint = 'Hello! I am connected to <b>online keyless AI</b> (no API key needed). I can analyze your students, attendance records, and notices. Ask me anything!';
             } else {
-              hint = 'On-device AI is not loaded yet. I can answer common questions now. Open <b>Settings</b> to load a <code>.litertlm</code> model for smarter answers.';
+              hint = 'Hello! You are currently offline. Running the <b>built-in rule engine</b> to answer questions about students, attendance, warnings, and letters.';
             }
             addBotMsg(hint, true);
             if (hasNativeAi() && localAi.state !== 'ready' && localAi.state !== 'loading') initLocalAi();
@@ -332,18 +332,14 @@
         el.textContent = 'loading model…';
         el.className = 'ai-status offline';
         el.title = 'Loading the on-device model.';
-      } else if (localAi.state === 'missing_model') {
-        el.textContent = 'model missing';
-        el.className = 'ai-status offline';
-        el.title = 'No .litertlm model found on the device.';
-      } else if (localAi.state === 'error') {
-        el.textContent = 'AI error';
-        el.className = 'ai-status offline';
-        el.title = localAi.message || 'On-device AI error';
+      } else if (navigator.onLine) {
+        el.textContent = 'online AI (free)';
+        el.className = 'ai-status online';
+        el.title = 'Keyless online AI is active. No API key needed!';
       } else {
         el.textContent = 'offline engine';
         el.className = 'ai-status offline';
-        el.title = 'On-device model not loaded. Using rule-based offline engine.';
+        el.title = 'Device is offline. Using rule-based offline engine.';
       }
     }
 
@@ -710,12 +706,49 @@
     });
   }
 
+  async function callOnlineFreeAi(prompt, contextReply) {
+    var fullPrompt = buildAiPrompt(prompt, contextReply);
+    var messages = [
+      {
+        role: 'system',
+        content: 'You are the intelligent assistant for the "Attendance" app. Answer questions, analyze attendance data, explain records, or compose formal notice drafts based on the provided APP DATA. Be concise, polite, and accurate. Format lists with bullets or bold text.'
+      },
+      {
+        role: 'user',
+        content: fullPrompt
+      }
+    ];
+
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, 25000);
+    try {
+      var res = await fetch('https://text.pollinations.ai/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          messages: messages,
+          model: 'openai',
+          seed: Math.floor(Math.random() * 100000)
+        })
+      });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var text = await res.text();
+      return text;
+    } catch (err) {
+      clearTimeout(timer);
+      throw err;
+    }
+  }
+
   async function processAiPrompt(prompt, contextReply) {
     refreshLocalAiStatus();
     if (hasNativeAi() && localAi.state !== 'ready' && localAi.state !== 'loading') {
       initLocalAi();
       refreshLocalAiStatus();
     }
+    // 1. If on-device LiteRT-LM is available and model is loaded, use it
     if (hasNativeAi() && localAi.state === 'ready') {
       try {
         var localRes = await callLocalAi(prompt, contextReply);
@@ -725,21 +758,41 @@
         updateAiStatus();
         return;
       } catch (e) {
-        console.warn('Local AI failed, falling back to offline engine:', e);
-        addBotMsg('<span class="ai-note">⚠ On-device AI could not answer (' + escHtml(e.message || 'error') + '). Using the rule-based offline engine.</span>', true);
-        updateAiStatus();
+        console.warn('Local AI failed, trying online AI:', e);
       }
-    } else if (localAi.state === 'loading') {
-      addBotMsg('<span class="ai-note">The on-device model is still loading. I used the rule-based offline engine for now. Try again in a moment for a smarter answer.</span>', true);
-    } else if (localAi.state === 'missing_model') {
-      addBotMsg('<span class="ai-note">⚠ No on-device AI model file was found. I used the rule-based offline engine. Open <b>Settings</b> for model setup instructions.</span>', true);
     }
 
+    // 2. If online, use keyless online AI (no API key required!)
+    if (navigator.onLine) {
+      var botDiv = addBotMsg('<span class="ai-note">Thinking online (keyless AI)…</span>', true);
+      try {
+        var onlineRes = await callOnlineFreeAi(prompt, contextReply);
+        if (onlineRes && onlineRes.trim()) {
+          var bubble = botDiv ? botDiv.querySelector('.ai-bubble') : null;
+          if (bubble) bubble.innerHTML = fmtAi(onlineRes.trim());
+          history.push({ role: 'user', text: prompt });
+          history.push({ role: 'model', text: onlineRes.trim() });
+          saveHistory();
+          updateAiStatus();
+          return;
+        }
+      } catch (e) {
+        console.warn('Online AI failed, falling back to offline engine:', e);
+        if (botDiv) botDiv.remove();
+      }
+    } else if (localAi.state === 'loading') {
+      addBotMsg('<span class="ai-note">The on-device model is still loading. I used the rule-based offline engine for now.</span>', true);
+    } else if (localAi.state === 'missing_model') {
+      addBotMsg('<span class="ai-note">Offline mode: using the rule-based offline engine. Connect to the internet or push a .litertlm model for conversational AI.</span>', true);
+    }
+
+    // 3. Fallback to rule-based offline engine
     var offlineRes = runOfflineAiEngine(prompt, contextReply);
     addBotMsg(offlineRes, true);
     history.push({ role: 'user', text: prompt });
     history.push({ role: 'model', text: 'Offline answer: ' + offlineRes.replace(/<[^>]+>/g, '') });
     saveHistory();
+    updateAiStatus();
   }
   // 7. Full-app data context
   // ---------------------------------------------------------------------------
@@ -1271,5 +1324,8 @@ function doGet(e) {
   }
 }`;
   };
+
+  window.addEventListener('online', updateAiStatus);
+  window.addEventListener('offline', updateAiStatus);
 
 })();
