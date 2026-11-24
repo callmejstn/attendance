@@ -211,9 +211,12 @@ summary{font-weight:700;margin:6px 0 12px;cursor:pointer;color:var(--red)}
 .sgpv{width:160px;height:68px;border:1px dashed var(--bd);border-radius:12px;background:#fff;display:grid;place-items:center;font-size:12px;color:#7a6b6b;overflow:hidden;flex:none}
 .sgpv img{max-width:100%;max-height:100%;display:block}
 .sgbtns{display:flex;gap:8px;flex-wrap:wrap}.sgbtns .btn{width:auto}
-#sgModal,#stModal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:80;display:none;place-items:center;padding:16px}
-#sgModal.on,#stModal.on{display:grid}
-#stModal .sgcard{max-height:92vh;overflow:auto}
+#sgModal,#stModal,#emModal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:80;display:none;place-items:center;padding:16px}
+#sgModal.on,#stModal.on,#emModal.on{display:grid}
+#stModal .sgcard,#emModal .sgcard{max-height:92vh;overflow:auto}
+#emModal{z-index:95}
+#emModal details{margin:2px 0 14px;border:1px solid var(--bd);border-radius:12px;padding:10px 12px}#emModal summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--mu)}#emModal details[open] summary{margin-bottom:10px}
+#emModal details ol{margin:0 0 10px;padding-left:18px;font-size:12px;color:var(--mu)}#emModal details code{background:var(--red-l);color:var(--red);padding:1px 5px;border-radius:6px;font-size:11px}
 .stopt{display:block;width:100%;text-align:left;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:12px;padding:10px 12px;margin-bottom:8px;font:inherit;cursor:pointer}.stopt b{display:block}.stopt span{display:block;font-size:12px;color:var(--mu);margin-top:2px}.stopt.on{border-color:var(--red);background:var(--red-l)}
 .lfilt{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-top:12px}.lfb{flex:none;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}.lfb i{font-style:normal;opacity:.7;margin-left:2px}.lfb.on{background:var(--red);border-color:var(--red);color:#fff}
 .t-app{background:#dcebfb;color:#17508a}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .t-app{background:#182f48;color:#9ecbf5}}:root[data-theme="dark"] .t-app{background:#182f48;color:#9ecbf5}
@@ -418,12 +421,30 @@ html,body{max-width:100%;overscroll-behavior-x:none}body{overflow-x:clip}
  <div id="lpPages"></div>
  <div id="lpEdit"><p class="hint" style="margin:0 0 12px">Change the wording below. Leave a blank line between paragraphs. Put **two stars** around words to make them bold. The date, names and signatures come from the letter form.</p>
   <label>Subject</label><input id="lpSubj"><label>Letter text</label><textarea id="lpBody" rows="16"></textarea></div>
- <div class="lpfoot" id="lpFootView"><button class="btn ghost" onclick="pvEditOpen()">Edit text</button><button class="btn ghost" onclick="downloadPreview()">Download PDF</button><button class="btn" id="lpSave" onclick="pvSave()">Save letter</button></div>
+ <div class="lpfoot" id="lpFootView"><button class="btn ghost" onclick="pvEditOpen()">Edit text</button><button class="btn ghost" onclick="downloadPreview()">Download PDF</button><button class="btn ghost" onclick="emOpenPv()">Email</button><button class="btn" id="lpSave" onclick="pvSave()">Save letter</button></div>
  <div class="lpfoot" id="lpFootEdit"><button class="btn ghost" onclick="pvEditCancel()">Cancel</button><button class="btn ghost" onclick="pvEditReset()">Reset text</button><button class="btn" onclick="pvEditApply()">Apply changes</button></div></div>
 <div id="stModal"><div class="sgcard"><h2 id="stTitle" style="margin:0 0 2px">Record</h2><p class="hint" id="stSub" style="margin:0 0 12px"></p>
  <div id="stOpts"></div><label>Date</label><input id="stDate" type="date"><label>Note (optional)</label><textarea id="stNote" rows="2" placeholder="e.g. Appeal reviewed by the Class Mayor"></textarea>
  <div class="btns"><button class="btn" onclick="stSave(false)">Save record</button><button class="btn ghost" onclick="stClose()">Cancel</button></div>
  <button class="btn" id="stMake" style="display:none;margin-top:10px" onclick="stSave(true)">Save and make SAO letter</button></div></div>
+<div id="emModal"><div class="sgcard"><h2 style="margin:0 0 2px">Email this letter</h2><p class="hint" id="emSub" style="margin:0 0 12px"></p>
+ <label for="emFrom">Letter from</label><input id="emFrom" placeholder="Your name" autocomplete="name">
+ <label for="emTo">Send to (email address)</label><input id="emTo" type="email" inputmode="email" autocapitalize="off" autocomplete="off" placeholder="student@example.com">
+ <label for="emNote">Additional message (optional)</label><textarea id="emNote" rows="3" placeholder="e.g. Please read the letter and reply to us before Friday."></textarea>
+ <p class="hint" id="emMsg" style="margin:-4px 0 12px"></p>
+ <details id="emSetup"><summary>How sending works (Google or email app)</summary>
+  <b style="font-size:13px">Google (sends the signed PDF)</b>
+  <ol style="margin-top:6px"><li>Tap <b>Copy the script</b> below.</li>
+  <li>Go to <b>script.google.com</b> and sign in with the Gmail that should send the letters. Tap <b>New project</b>, delete the code in the editor, and paste the copied script.</li>
+  <li>Tap <b>Deploy &rarr; New deployment</b>. Next to Select type tap the gear and choose <b>Web app</b>.</li>
+  <li>Set Execute as to <b>Me</b>, and Who has access to <b>Anyone</b>. Tap Deploy and approve access.</li>
+  <li>Copy the <b>Web app URL</b>, paste it in the box below, and you are done. The password is kept for you.</li></ol>
+  <button type="button" class="btn ghost sm" style="margin-bottom:12px" onclick="emCopyScript()">Copy the script</button>
+  <label for="emGas">Web app URL</label><input id="emGas" autocomplete="off" placeholder="https://script.google.com/macros/s/.../exec" oninput="emCfgIn()">
+  <label for="emGsec">Password (made for you when you copy the script)</label><input id="emGsec" autocomplete="off" oninput="emCfgIn()">
+ </details>
+ <div class="btns"><button class="btn" id="emSendBtn" onclick="emSend()">Send letter</button><button class="btn ghost" onclick="emClose()">Cancel</button></div>
+ <button class="btn ghost" id="emShareBtn" style="display:none;margin-top:10px" onclick="emShare()">Share the PDF instead</button></div></div>
 <div id="sgModal"><div class="sgcard"><h2 style="margin:0 0 10px">Draw signature</h2><canvas id="sgCv"></canvas><div class="btns"><button class="btn ghost" onclick="sgClearPad()">Clear</button><button class="btn" onclick="sigUse()">Use signature</button></div><button class="btn ghost" style="margin-top:10px" onclick="sgClose()">Cancel</button></div></div>
 <div id="toasts" role="status" aria-live="polite"></div>
 <div id="printSheet"></div>
@@ -2908,7 +2929,7 @@ function wlShort(w){var ls=lettersFor(w);if(!ls.length)return '<span class="wl n
  return '<span class="wl"><i class="tag '+STC[stOf(l)]+'">'+STL[stOf(l)]+'</i><em>'+esc(LTS[l.ty])+' \u00b7 '+esc(f(new Date(l.date+'T00:00'),{month:'short',day:'numeric'}))+(ls.length>1?' \u00b7 '+ls.length+' letters':'')+'</em></span>'}
 function wlFull(w,ix){var ls=lettersFor(w);if(!ls.length)return '<button class="btn ghost sm" style="margin-top:8px" onclick="newLetterFrom('+ix+')">Make letter from this warning</button>';
  return '<div class="wlbox"><b>Letters for this warning</b>'+ls.map(function(l){var st=stOf(l),mk=st==='san'&&canSao(l)&&!l.nx?'<button class="btn sm" onclick="makeSaoLetter(\''+l.id+'\')">Make SAO letter</button>':'';
-  return '<div class="wlr"><div><b>'+esc(LTS[l.ty])+'</b> \u00b7 '+esc(longDate(l.date))+' <i class="tag '+STC[st]+'">'+STL[st]+'</i>'+(l.sn?'<div class="hint" style="margin:2px 0 0">'+esc(l.sn)+'</div>':'')+'</div><div class="acts">'+mk+'<button class="btn '+(mk?'ghost ':'')+'sm" onclick="stOpen(\''+l.id+'\')">Record</button><button class="btn ghost sm" onclick="openPreview(\''+l.id+'\')">Preview</button></div></div>'}).join('')+'</div>'}
+  return '<div class="wlr"><div><b>'+esc(LTS[l.ty])+'</b> \u00b7 '+esc(longDate(l.date))+' <i class="tag '+STC[st]+'">'+STL[st]+'</i>'+(l.sn?'<div class="hint" style="margin:2px 0 0">'+esc(l.sn)+'</div>':'')+'</div><div class="acts">'+mk+'<button class="btn '+(mk?'ghost ':'')+'sm" onclick="stOpen(\''+l.id+'\')">Record</button><button class="btn ghost sm" onclick="openPreview(\''+l.id+'\')">Preview</button><button class="btn ghost sm" onclick="emOpen(\''+l.id+'\')">Email</button></div></div>'}).join('')+'</div>'}
 function drawWarns(){
  var c={},seen={},byD={},lastD='',sfx=['','1st','2nd','3rd'];warns.forEach(function(w){c[w.i]=(c[w.i]||0)+1;byD[w.d]=(byD[w.d]||0)+1});
  document.getElementById('wList').innerHTML=warns.length?warns.map(function(w,ix){seen[w.i]=(seen[w.i]||0)+1;var o=c[w.i]-seen[w.i]+1,k=wk(w),op=openW===k,nth=sfx[o]||o+'th',dd=new Date(w.d+'T00:00'),when=f(dd,{month:'short',day:'numeric',year:'numeric'})+' \u00b7 '+w.t,hd='';
@@ -3090,7 +3111,7 @@ function drawLetters(){var e=document.getElementById('letList');if(!e)return;
  e.innerHTML=L.length?L.map(function(l){var st=stOf(l),sub=[LT[l.ty],longDate(l.date)];
   var note=[];if(l.inc)note.push('Incident: '+longDate(l.inc));if(l.sd&&st)note.push('Marked on '+longDate(l.sd));if(l.sn)note.push(l.sn);if(l.nx)note.push('SAO letter made');
   var mk=st==='san'&&canSao(l)&&!l.nx?'<button class="btn sm" onclick="makeSaoLetter(\''+l.id+'\')">Make SAO letter</button>':'';
-  return '<div class="row rw"><div class="av">'+esc(ini(salOf(l.to)+' '+toName(l.to).split(',')[0]))+'</div><div class="grow"><b>'+esc(l.to)+'</b><span>'+esc(sub.join(' · '))+'</span>'+(note.length?'<span>'+esc(note.join(' · '))+'</span>':'')+'</div><span class="tag '+STC[st]+'">'+STL[st]+'</span><div class="acts">'+mk+'<button class="btn '+(mk?'ghost ':'')+'sm" onclick="stOpen(\''+l.id+'\')">Record</button><button class="btn ghost sm" onclick="openPreview(\''+l.id+'\')">Preview</button><button class="btn ghost sm" onclick="editLetter(\''+l.id+'\')">Edit</button><button class="btn ghost sm" onclick="delLetter(\''+l.id+'\')" aria-label="Delete letter">'+(armL===l.id?'Sure?':'✕')+'</button></div></div>'}).join(''):'<p style="color:var(--mu);margin:0">'+(all.length?'No letters in this group.':'No letters yet.')+'</p>'}
+  return '<div class="row rw"><div class="av">'+esc(ini(salOf(l.to)+' '+toName(l.to).split(',')[0]))+'</div><div class="grow"><b>'+esc(l.to)+'</b><span>'+esc(sub.join(' · '))+'</span>'+(note.length?'<span>'+esc(note.join(' · '))+'</span>':'')+'</div><span class="tag '+STC[st]+'">'+STL[st]+'</span><div class="acts">'+mk+'<button class="btn '+(mk?'ghost ':'')+'sm" onclick="stOpen(\''+l.id+'\')">Record</button><button class="btn ghost sm" onclick="openPreview(\''+l.id+'\')">Preview</button><button class="btn ghost sm" onclick="emOpen(\''+l.id+'\')">Email</button><button class="btn ghost sm" onclick="editLetter(\''+l.id+'\')">Edit</button><button class="btn ghost sm" onclick="delLetter(\''+l.id+'\')" aria-label="Delete letter">'+(armL===l.id?'Sure?':'✕')+'</button></div></div>'}).join(''):'<p style="color:var(--mu);margin:0">'+(all.length?'No letters in this group.':'No letters yet.')+'</p>'}
 function stOpen(id){var l=letters.filter(function(z){return z.id===id})[0];if(!l)return;stId=id;stSel=stOf(l);
  document.getElementById('stTitle').textContent='Record for '+l.to;document.getElementById('stSub').textContent=LT[l.ty]+' · '+longDate(l.date);
  document.getElementById('stDate').value=l.sd||ymd(today);document.getElementById('stNote').value=l.sn||'';stDraw();document.getElementById('stModal').classList.add('on')}
@@ -3258,6 +3279,71 @@ async function pvEditReset(){if(!pv)return;if(!pv.L.body&&!pv.L.subj){var a=pvAu
  var a2=pvAuto();document.getElementById('lpSubj').value=a2.sub;document.getElementById('lpBody').value=parasToText(a2);await renderPv();toast('Back to the automatic text. Press Save to keep it.','info')}
 async function downloadPreview(){if(!pv)return;var L=pv.L,S=pv.S,IM=pv.IM;saveVia(letterFileName(L),letterPdf(L,S,IM),function(t,bad){toast(t,bad?'bad':'ok')})}
 async function dlLetter(id){var L=letters.filter(function(l){return l.id===id})[0];if(!L)return;var S=lset0();saveVia(letterFileName(L),letterPdf(L,S,await letterImgs(S,L)),function(t,bad){toast(t,bad?'bad':'ok')})}
+var EMK='qrEmailCfgV1',emCtx=null;
+try{var emj=JSON.parse(localStorage.getItem(EMK)||'null');if(emj&&!emc.mt){emc=emFix(Object.assign({},emj,{mt:Date.now()}));save()}if(emj)localStorage.removeItem(EMK)}catch(e){}
+function emSaveCfg(){emc.mt=Date.now();save()}
+function emV(id){return document.getElementById(id).value.trim()}
+function emCanShare(){try{return !!(navigator.canShare&&navigator.canShare({files:[new File(['x'],'a.pdf',{type:'application/pdf'})]}))}catch(e){return false}}
+function emGas(){return !!(emc.gas&&emc.gsec)}
+function emAny(){return emGas()}
+function emMode(){document.getElementById('emMsg').textContent=emGas()?'Direct sending is on (Google). The signed PDF is sent right away, with your additional message.':'Direct sending is off. Send will save the PDF and open your email app with the address, subject and your message filled in. Attach the PDF there, or set up direct sending below.';
+ document.getElementById('emShareBtn').style.display=!emAny()&&emCanShare()?'block':'none'}
+function emPdf(L,S){return letterImgs(S,L).then(function(IM){return new Promise(function(res,rej){var f=new FileReader();f.onload=function(){res({name:letterFileName(L),uri:f.result})};f.onerror=function(){rej(new Error('Could not make the PDF.'))};f.readAsDataURL(letterPdf(L,S,IM))})})}
+function emGasCode(sec){return ['var SECRET = "'+sec+'";','','function doGet() { return out({ok: true, info: "Letter sender is running"}); }','',
+ 'function doPost(e) {','  try {','    var d = JSON.parse(e.postData.contents);','    if (d.secret !== SECRET) return out({ok: false, error: "Wrong password"});',
+ '    if (String(d.to || "").indexOf("@") < 1) return out({ok: false, error: "Check the email address"});','    var opt = {name: d.fromName || "Class Officers"};',
+ '    if (d.pdf) opt.attachments = [Utilities.newBlob(Utilities.base64Decode(d.pdf), "application/pdf", d.pdfName || "letter.pdf")];',
+ '    MailApp.sendEmail(d.to, d.subject || "Letter", d.message || "", opt);','    return out({ok: true});','  } catch (err) {','    return out({ok: false, error: String(err)});','  }','}','',
+ 'function out(o) {','  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);','}'].join('\n')}
+function emCopyScript(){var g=document.getElementById('emGsec');
+ if(!g.value.trim()){var a=new Uint8Array(12);crypto.getRandomValues(a);g.value=Array.prototype.map.call(a,function(x){return ('0'+x.toString(16)).slice(-2)}).join('');emCfgIn()}
+ var code=emGasCode(g.value.trim());
+ var ok=function(){toast('Script copied. Paste it into script.google.com.','ok')},bad=function(){var t=document.createElement('textarea');t.value=code;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();var r=false;try{r=document.execCommand('copy')}catch(e){}t.remove();if(r)ok();else toast('Could not copy. Try again.','bad')};
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(ok,bad);else bad()}
+function emCfgIn(){emc.gas=emV('emGas');emc.gsec=emV('emGsec');emSaveCfg();emMode()}
+function emMailto(to,sub,ex){var b=(ex||'').replace(/\n/g,'\r\n');return 'mailto:'+to+'?subject='+encodeURIComponent(sub)+(b?'&body='+encodeURIComponent(b):'')}
+function emShow(L,S){emCtx={L:L,S:S};
+ document.getElementById('emSub').textContent=LT[L.ty]+' for '+L.to;
+ document.getElementById('emFrom').value=emc.from||S.from||'';
+ document.getElementById('emNote').value='';var sx=emStu(L);document.getElementById('emTo').value=(sx&&sx.em)||(L.sid&&emc.map[L.sid])||'';
+ document.getElementById('emGas').value=emc.gas;document.getElementById('emGsec').value=emc.gsec;
+ document.getElementById('emSetup').open=false;emMode();document.getElementById('emModal').classList.add('on');
+ if(!document.getElementById('emTo').value)setTimeout(function(){document.getElementById('emTo').focus()},50)}
+function emStu(L){if(!L)return null;var x=L.sid?students.filter(function(z){return z.i===L.sid})[0]:null;if(x)return x;var n=toName(L.to||'').toLowerCase().replace(/\s+/g,' ').trim();if(!n)return null;var m=students.filter(function(z){return toName(z.n).toLowerCase().replace(/\s+/g,' ').trim()===n});return m.length===1?m[0]:null}
+function emOpenPv(){if(pv)emShow(pv.L,pv.S)}
+function emOpen(id){var L=letters.filter(function(l){return l.id===id})[0];if(!L)return;emShow(Object.assign({},L),lset0())}
+function emClose(){document.getElementById('emModal').classList.remove('on');emCtx=null}
+function emBuild(L,S,fr,ex){
+ var c=Object.assign({},L);delete c.body;delete c.subj;var a=letterPdf(c,S,{},true),ps=(L.body&&L.body.length)?L.body:a.slice(),sub=L.subj||a.sub,
+ un=function(t){return t.replace(/\*\*/g,'')},from=[S.from,S.pos,S.sec].filter(Boolean).join(', ');
+ var base='Date: '+longDate(L.date)+'\nTo: '+L.to+'\nFrom: '+from+'\nSubject: '+sub+'\n\n'+ps.map(un).join('\n\n')+'\n\nRespectfully,\n\n'+S.from+'\n'+S.sig+'\n\nReviewed by:\n'+S.rev+'\n'+S.revT+'\n\n--\nSent by '+fr;return {sub:sub,base:base,text:(ex?ex+'\n\n':'')+base}}
+function emSent(btn){btn.disabled=false;btn.textContent='Send letter'}
+async function emSend(){
+ if(!emCtx)return;var L=emCtx.L,S=emCtx.S,to=emV('emTo'),fr=emV('emFrom'),btn=document.getElementById('emSendBtn');
+ if(!fr){toast('Type who the letter is from.','bad');return}
+ if(!/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(to)){toast('Type a valid email address.','bad');return}
+ emc.from=fr;if(L.sid)emc.map[L.sid]=to;emSaveCfg();var sx=emStu(L);if(sx&&sx.em!==to){sx.em=to;sx.mt=Date.now();drawStudents();save()}
+ var ex=emV('emNote'),m=emBuild(L,S,fr,ex);
+ if(emGas()){
+  if(navigator.onLine===false){toast('You are offline. Connect to the internet to send.','bad');return}
+  btn.disabled=true;btn.textContent='Sending...';
+  try{var pf=await emPdf(L,S);
+   var r0=await fetch(emc.gas,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({secret:emc.gsec,to:to,fromName:fr,subject:m.sub,message:ex||' ',pdf:pf.uri.split(',')[1],pdfName:pf.name})});
+   var j0=null;try{j0=await r0.json()}catch(e){throw new Error('No reply from Google. Check that the web app is deployed with access set to Anyone.')}
+   if(!j0||!j0.ok)throw new Error((j0&&j0.error)||'Google could not send it.');
+   toast('Letter sent to '+to,'ok');emClose()}
+  catch(e){toast('Could not send: '+(e&&e.message?e.message:'check your connection'),'bad')}
+  emSent(btn);return}
+ btn.disabled=true;
+ try{var IM=await letterImgs(S,L);dlBlob(letterFileName(L),letterPdf(L,S,IM))}catch(e){emSent(btn);toast('Could not make the PDF.','bad');return}
+ var url=emMailto(to,m.sub,ex);
+ toast('PDF saved. Attach it to the email that opens.','info');btn.disabled=false;
+ setTimeout(function(){location.href=url},350)}
+async function emShare(){
+ if(!emCtx)return;var L=emCtx.L,S=emCtx.S,fr=emV('emFrom')||S.from;
+ try{var m=emBuild(L,S,fr,emV('emNote')),IM=await letterImgs(S,L),f=new File([letterPdf(L,S,IM)],letterFileName(L),{type:'application/pdf'});
+  await navigator.share({files:[f],title:m.sub,text:emV('emNote')});emClose()}
+ catch(e){if(!e||e.name!=='AbortError')toast('Could not share the PDF.','bad')}}
 var online=false;
 function toggleSync(){online=!online;var c=document.getElementById('sync');c.classList.toggle('sync',online);document.getElementById('syncT').textContent=online?'Online · Synced':'Offline · 3 pending'}
 function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
