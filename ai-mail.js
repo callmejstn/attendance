@@ -332,6 +332,23 @@
     if (ft) ft.style.display = tab === 'chat' ? 'flex' : 'none';
   };
 
+  window.aiOpenPreview = function (id) {
+    try {
+      var d = document.getElementById('aiDrawer');
+      if (d) d.classList.remove('on');
+    } catch (e) {}
+    if (typeof openPreview === 'function') openPreview(String(id));
+  };
+
+  window.aiEditLetter = function (id) {
+    try {
+      var d = document.getElementById('aiDrawer');
+      if (d) d.classList.remove('on');
+    } catch (e) {}
+    if (typeof go === 'function') go('letters');
+    if (typeof editLetter === 'function') editLetter(String(id));
+  };
+
   function aiConfigured() {
     refreshLocalAiStatus();
     return cloudOnline() || localAi.state === 'ready';
@@ -462,8 +479,8 @@
   async function sendEmailForLetter(L, S) {
     if (!window.emc.autoSend || !L) return;
     var sts = allStudents();
-    var st = sts.filter(function (x) { return x.i === L.st || (x.n && x.n.toLowerCase() === (L.to || '').toLowerCase()); })[0];
-    var email = (st && st.em) || window.emc.map[L.st] || window.emc.map[L.to];
+    var st = sts.filter(function (x) { return x.i === L.sid || x.i === L.st || (x.n && x.n.toLowerCase() === (L.to || '').toLowerCase()); })[0];
+    var email = (st && st.em) || window.emc.map[L.sid] || window.emc.map[L.st] || window.emc.map[L.to];
     if (!email) {
       says('Auto-email skipped: no email address for ' + (L.to || 'this student'));
       return;
@@ -574,7 +591,7 @@
       if (b2) { b2.textContent = r.replies.length; b2.style.display = 'flex'; }
       var lettersList = allLetters();
       listEl.innerHTML = r.replies.map(function (rep, idx) {
-        var matchL = lettersList.filter(function (l) { return l.id === rep.refId; })[0];
+        var matchL = lettersList.filter(function (l) { return String(l.id) === String(rep.refId); })[0];
         return '<div class="inbox-item">' +
           '<b>' + escHtml(rep.from) + ' <small>(' + escHtml(rep.date) + ')</small></b>' +
           '<div style="font-size:11px;font-weight:600;margin:2px 0">Subject: ' + escHtml(rep.subject) + (matchL ? ' · <span class="chip ok">Matched Letter #' + escHtml(matchL.id) + '</span>' : '') + '</div>' +
@@ -723,7 +740,7 @@
       totals[s.i] = { present: 0, late: 0, absent: 0, recorded: 0, warnings: 0, letters: 0 };
     });
     wrs.forEach(function (w) { if (totals[w.i]) totals[w.i].warnings++; });
-    lts.forEach(function (l) { if (totals[l.st]) totals[l.st].letters++; });
+    lts.forEach(function (l) { var k = l.sid || l.st; if (totals[k]) totals[k].letters++; });
 
     var subjects = sbs.map(function (sub) {
       var byDate = {};
@@ -1227,13 +1244,14 @@
     });
 
     var letters = lts.map(function (l) {
-      if (per[l.st]) per[l.st].letters++;
+      var sId = l.sid || l.st;
+      if (per[sId]) per[sId].letters++;
       return {
         id: l.id,
         type: letterTypeName(l.ty),
         date: l.date || '',
         student: l.to || '',
-        studentId: l.st || '',
+        studentId: sId || '',
         offense: l.off || '',
         rule: l.rule || '',
         subject: l.subj || ''
@@ -1333,7 +1351,7 @@
       });
     });
     wrs.forEach(function (w) { if (byId[w.i]) byId[w.i].warnings++; });
-    lts.forEach(function (l) { if (byId[l.st]) byId[l.st].letters++; });
+    lts.forEach(function (l) { var k = l.sid || l.st; if (byId[k]) byId[k].letters++; });
 
     var todayRecords = [];
     var currentSub = sbs[currentSubjectIndex()] || sbs[0];
@@ -1408,7 +1426,7 @@
     });
     var recent = item.entries.slice().sort(function (x, y) { return String(y.date).localeCompare(String(x.date)); });
     var w = allWarns().filter(function (x) { return x.i === st.i; });
-    var l = allLetters().filter(function (x) { return x.st === st.i; });
+    var l = allLetters().filter(function (x) { return x.sid === st.i || x.st === st.i || x.to === st.n; });
 
     var html = '<b>👤 ' + escHtml(st.n) + '</b><br>' +
       'ID: ' + escHtml(st.i) + (st.sec ? ' · Section: ' + escHtml(st.sec) : '') + '<br>' +
@@ -1438,10 +1456,10 @@
 
     // --- Appeal analysis -----------------------------------------------------
     if (contextReply) {
-      var matchL = allLetters().filter(function (l) { return l.id === contextReply.refId; })[0];
+      var matchL = allLetters().filter(function (l) { return String(l.id) === String(contextReply.refId); })[0];
       var matchSt = sts.filter(function (s) {
         return (s.em && s.em.toLowerCase() === String(contextReply.from || '').toLowerCase()) ||
-          (matchL && matchL.st === s.i) ||
+          (matchL && (matchL.sid === s.i || matchL.st === s.i || matchL.to === s.n)) ||
           (contextReply.from && String(contextReply.from).toLowerCase().indexOf(String(s.n || '').toLowerCase()) > -1);
       })[0];
       var recCount = matchSt ? allWarns().filter(function (w) { return w.i === matchSt.i; }).length : 0;
@@ -1520,20 +1538,21 @@
       else if (/sanction|3rd|third|last/.test(p)) ty = '3';
       else if (/clean/.test(p)) ty = '4';
       else if (/endorse|sao/.test(p)) ty = '5';
+      var letId = 'L' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       var L = {
-        id: Date.now(), ty: ty, date: todayKey(), to: lst.n,
+        id: letId, ty: ty, date: todayKey(), to: lst.n,
         sal: typeof firstName === 'function' ? firstName(lst.n) : lst.n,
         inc: todayKey(), off: 'Classroom rules violation', rule: 'Classroom Regulations',
-        st: lst.i, mt: Date.now()
+        sid: lst.i, st: '', mt: Date.now()
       };
       allLetters().push(L);
       if (typeof save === 'function') save();
       if (typeof drawLetters === 'function') drawLetters();
       if (window.emc.autoSend) sendEmailForLetter(L, typeof lset0 === 'function' ? lset0() : {});
       return '<b>✨ Created ' + escHtml(letterTypeName(ty)) + ' for ' + escHtml(lst.n) + '</b><br>' +
-        'Letter ID: #' + L.id + '<div class="ai-card-btns">' +
-        '<button class="btn sm" onclick="openPreview(' + L.id + ')">Preview PDF</button>' +
-        '<button class="btn ghost sm" onclick="editLetter(' + L.id + ')">Edit details</button></div>';
+        'Letter ID: #' + escHtml(L.id) + '<div class="ai-card-btns">' +
+        '<button class="btn sm" onclick="aiOpenPreview(\'' + L.id + '\')">Preview PDF</button>' +
+        '<button class="btn ghost sm" onclick="aiEditLetter(\'' + L.id + '\')">Edit details</button></div>';
     }
 
     // --- Today's absentees ---------------------------------------------------
