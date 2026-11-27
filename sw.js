@@ -1,6 +1,6 @@
 // Attendance app service worker: always tries the network first so updates show up,
 // and falls back to the saved copy when the phone is offline.
-const CACHE = 'attendance-v8';
+const CACHE = 'attendance-v9';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'ai-mail.js'];
 
 self.addEventListener('install', (e) => {

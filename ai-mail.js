@@ -37,9 +37,14 @@
   // to Pollinations' public endpoint. The free tier allows about one answer
   // every 45 seconds per IP, so the app waits and retries once when needed.
   var LS_CLOUD = 'qrAttAiCloud';
-  var cloudAi = Object.assign({ enabled: true, cooldownUntil: 0 }, readJson(LS_CLOUD));
+  var cloudAi = Object.assign({ enabled: true, cooldownUntil: 0, apiKey: '', model: 'deepseek' }, readJson(LS_CLOUD));
   function saveCloudAi() {
-    writeJson(LS_CLOUD, { enabled: cloudAi.enabled !== false, cooldownUntil: cloudAi.cooldownUntil || 0 });
+    writeJson(LS_CLOUD, {
+      enabled: cloudAi.enabled !== false,
+      cooldownUntil: cloudAi.cooldownUntil || 0,
+      apiKey: (cloudAi.apiKey || '').trim(),
+      model: cloudAi.model || 'deepseek'
+    });
   }
   function cloudEnabled() { return cloudAi.enabled !== false; }
   function cloudOnline() { return cloudEnabled() && !!navigator.onLine; }
@@ -234,17 +239,20 @@
         </div>
 
         <div class="ai-body" id="aiTabBodySettings" style="display:none">
-          <h4 style="margin:0 0 8px;font-size:14px">AI Engine</h4>
-          <p class="ai-note" style="margin:0 0 10px">No API key is needed. When you are online, the assistant uses a <b>free public AI</b> for full, natural answers. Offline, it uses the on-device model if one is installed, then the built-in rule engine.</p>
+          <h4 style="margin:0 0 8px;font-size:14px">AI Engine (DeepSeek)</h4>
+          <p class="ai-note" style="margin:0 0 10px">The assistant uses <b>DeepSeek</b> for fast, high-quality answers. It works 100% free with no API key, or with your own official DeepSeek API key. Offline, it uses on-device inference or built-in rules.</p>
 
-          <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;margin-bottom:4px">
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;margin-bottom:8px">
             <input type="checkbox" id="aiUseCloud" onchange="updAiSettings()" style="margin-top:2px">
-            <span><b>Use free online AI when connected</b><br><span class="ai-note">No signup, no key. Allows about one answer every 45 seconds.</span></span>
+            <span><b>Use DeepSeek online AI when connected</b><br><span class="ai-note">Works out-of-the-box with free DeepSeek (no API key required).</span></span>
           </label>
-          <p class="ai-note" style="margin:2px 0 12px"><b>Privacy:</b> your question and a summary of class data (names, attendance counts, warnings) are sent to <code>text.pollinations.ai</code>, a third-party service. Turn this off to keep everything on the phone.</p>
+
+          <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">DeepSeek API Key (Optional)</label>
+          <input class="ai-input" id="aiDeepseekKey" type="password" placeholder="sk-... (leave blank for free keyless DeepSeek)" style="width:100%;margin-bottom:4px" onchange="updAiSettings()">
+          <p class="ai-note" style="margin:0 0 12px">Leave blank to use <b>free keyless DeepSeek</b>. If you have your own DeepSeek API key from <code>platform.deepseek.com</code>, enter it here for instant direct answers with no cooldown.</p>
 
           <div class="ai-card" style="margin-bottom:10px">
-            <div><b>Free online AI:</b> <span id="cloudAiState">Checking…</span></div>
+            <div><b>Online Model:</b> <span id="cloudAiState">Checking…</span></div>
             <div style="margin-top:4px"><b>On-device model:</b> <span id="localAiState">Checking…</span></div>
             <div id="localAiModel" class="ai-note" style="margin-top:4px"></div>
             <div id="localAiMsg" class="ai-note" style="margin-top:6px;white-space:pre-wrap"></div>
@@ -298,7 +306,7 @@
             } else if (localAi.state === 'loading') {
               hint = 'The on-device AI model is loading. I can still answer common questions with the rule-based offline engine while it loads.';
             } else if (cloudOnline()) {
-              hint = 'Hello! I am using <b>free online AI</b> (no API key). I can read every record, write complete answers, draft emails, and create letters. Try “Create a warning letter for [name]”.';
+              hint = 'Hello! I am powered by <b>DeepSeek AI</b> (online, no API key required). I can read every record, write complete answers, draft emails, and create letters. Try “Create a warning letter for [name]”.';
             } else {
               hint = 'Hello! Online AI is off or unavailable, so I am using the <b>built-in rule engine</b> for students, attendance, warnings, and letters.';
             }
@@ -394,9 +402,11 @@
         cs.textContent = 'Off';
       } else if (!navigator.onLine) {
         cs.textContent = 'Waiting for internet';
+      } else if (cloudAi.apiKey) {
+        cs.textContent = 'DeepSeek (Direct API Key)';
       } else {
         var cd = cloudCooldownSec();
-        cs.textContent = cd > 0 ? ('Cooling down (' + cd + 's)') : 'Ready (free, no key)';
+        cs.textContent = cd > 0 ? ('DeepSeek (cooling down ' + cd + 's)') : 'DeepSeek (Free, no key)';
       }
     }
 
@@ -425,6 +435,7 @@
   function loadSettingsUI() {
     var a = document.getElementById('aiAutoSend'); if (a) a.checked = !!window.emc.autoSend;
     var c = document.getElementById('aiUseCloud'); if (c) c.checked = cloudEnabled();
+    var dk = document.getElementById('aiDeepseekKey'); if (dk) dk.value = cloudAi.apiKey || '';
     var g = document.getElementById('aiGasUrl'); if (g) g.value = window.emc.gasUrl || '';
     var ob = document.getElementById('outboxCount'); if (ob) ob.textContent = (window.emc.outbox || []).length;
     updateAiStatus();
@@ -435,6 +446,8 @@
     window.emc.gasUrl = ((document.getElementById('aiGasUrl') || {}).value || '').trim();
     var c = document.getElementById('aiUseCloud');
     if (c) cloudAi.enabled = !!c.checked;
+    var dk = document.getElementById('aiDeepseekKey');
+    if (dk) cloudAi.apiKey = dk.value.trim();
     saveCloudAi();
     saveEmc();
     updateAiStatus();
@@ -913,6 +926,43 @@
     });
   }
 
+  async function callDirectDeepseek(prompt, contextReply, apiKey) {
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, 60000);
+    try {
+      var res = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: buildCloudMessages(prompt, contextReply),
+          max_tokens: 3000,
+          temperature: 0.4
+        })
+      });
+      var raw = await res.text();
+      if (!res.ok) {
+        var err = new Error('DeepSeek API returned HTTP ' + res.status + ': ' + raw.slice(0, 150));
+        err.status = res.status;
+        throw err;
+      }
+      var j = JSON.parse(raw);
+      var text = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '';
+      text = String(text || '').trim();
+      if (!text) throw new Error('DeepSeek returned an empty response.');
+      return text;
+    } catch (e) {
+      if (e && e.name === 'AbortError') throw new Error('DeepSeek request timed out after 60 seconds.');
+      throw e;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   async function callOnlineFreeAi(prompt, contextReply) {
     var controller = new AbortController();
     var timer = setTimeout(function () { controller.abort(); }, 90000);
@@ -922,7 +972,7 @@
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
         body: JSON.stringify({
-          model: 'openai',
+          model: 'deepseek',
           messages: buildCloudMessages(prompt, contextReply),
           max_tokens: 3000,
           temperature: 0.4,
@@ -931,7 +981,7 @@
       });
       var raw = await res.text();
       if (!res.ok) {
-        var httpErr = new Error('Free AI returned HTTP ' + res.status);
+        var httpErr = new Error('Free DeepSeek returned HTTP ' + res.status);
         httpErr.status = res.status;
         var m = /retry\s+after\s+(\d+)\s*s/i.exec(raw) || /"retry_after"\s*:\s*(\d+)/i.exec(raw);
         if (m) httpErr.retryAfter = parseInt(m[1], 10);
@@ -960,14 +1010,21 @@
         }
       }
       text = String(text || '').trim();
-      if (!text) throw new Error('Free AI returned an empty answer.');
+      if (!text) throw new Error('DeepSeek returned an empty answer.');
       return text;
     } catch (e) {
-      if (e && e.name === 'AbortError') throw new Error('Free AI timed out after 90 seconds.');
+      if (e && e.name === 'AbortError') throw new Error('DeepSeek timed out after 90 seconds.');
       throw e;
     } finally {
       clearTimeout(timer);
     }
+  }
+
+  async function callOnlineAi(prompt, contextReply) {
+    if (cloudAi.apiKey) {
+      return callDirectDeepseek(prompt, contextReply, cloudAi.apiKey);
+    }
+    return callOnlineFreeAi(prompt, contextReply);
   }
 
   function stripAiMarkup(text) {
@@ -1107,23 +1164,26 @@
       return;
     }
 
-    // 1. Free online AI (no key). Best quality when connected.
+    // 1. Online DeepSeek AI (Direct API key or free keyless).
     if (cloudOnline()) {
-      var bubble = addBotMsg('<span class="ai-note">Thinking with free online AI…</span>', true);
+      var isDirectKey = !!cloudAi.apiKey;
+      var bubble = addBotMsg('<span class="ai-note">Thinking with DeepSeek AI…</span>', true);
       var answer = null;
       var lastErr = null;
       try {
-        var pre = cloudCooldownSec();
-        if (pre > 0) await waitForCloud(bubble, pre, 'Free AI is cooling down — answering in');
-        answer = await callOnlineFreeAi(prompt, contextReply);
+        if (!isDirectKey) {
+          var pre = cloudCooldownSec();
+          if (pre > 0) await waitForCloud(bubble, pre, 'DeepSeek (free) is cooling down — answering in');
+        }
+        answer = await callOnlineAi(prompt, contextReply);
       } catch (e) {
         lastErr = e;
-        if (e && e.rateLimited && e.retryAfter && e.retryAfter <= 60) {
+        if (!isDirectKey && e && e.rateLimited && e.retryAfter && e.retryAfter <= 60) {
           cloudAi.cooldownUntil = Date.now() + (e.retryAfter * 1000);
           saveCloudAi();
           try {
-            await waitForCloud(bubble, e.retryAfter, 'Free AI is cooling down — answering in');
-            answer = await callOnlineFreeAi(prompt, contextReply);
+            await waitForCloud(bubble, e.retryAfter, 'DeepSeek (free) is cooling down — answering in');
+            answer = await callOnlineAi(prompt, contextReply);
           } catch (e2) {
             lastErr = e2;
           }
@@ -1141,13 +1201,13 @@
         updateAiStatus();
         return;
       }
-      if (lastErr && lastErr.rateLimited) {
+      if (!isDirectKey && lastErr && lastErr.rateLimited) {
         cloudAi.cooldownUntil = Date.now() + Math.max(30, lastErr.retryAfter || 45) * 1000;
         saveCloudAi();
       }
       if (bubble && bubble.parentNode) bubble.parentNode.removeChild(bubble);
-      addBotMsg('<span class="ai-note">Free online AI could not answer right now (' +
-        escHtml(lastErr && lastErr.message ? lastErr.message : 'unknown error') +
+      addBotMsg('<span class="ai-note">DeepSeek AI could not answer (' +
+        escHtml(lastErr && lastErr.message ? lastErr.message : 'network error') +
         '). Trying the on-device engine and built-in rules below.</span>', true);
       updateAiStatus();
     }
